@@ -18,6 +18,7 @@ describe JAWS::SDB do
   end
 
   it 'each' do
+=begin
     p JAWS::SDB::Adapter.put_attributes('aaa', 'a', {'a' => [1, 2, 3]})
     JAWS::SDB['aaa'].select.each do |attr|
       p attr
@@ -36,6 +37,27 @@ describe JAWS::SDB do
     p JAWS::SDB::get('aaa', 'a')
 
     p JAWS::SDB::Adapter.delete_attributes('aaa', 'a')
+    JAWS::SDB['aaa'].select.each do |attr|
+      p attr
+    end
+=end
+    p JAWS::SDB::Adapter.batch_put_attributes(
+      'aaa',
+      {
+        'a' => {'a' => [1, 2, 3], 'b' => 4},
+        'b' => {'a' => [10, 20, 30], 'b' => 40},
+        'c' => {'a' => [100, 200, 300], 'b' => 400}
+      }
+    )
+    JAWS::SDB['aaa'].select.each do |attr|
+      p attr
+    end
+
+    p JAWS::SDB::Adapter.batch_put_attributes(
+      'aaa',
+      {'a' => {'a' => [100], 'b' => 400} },
+      {'a' => ['a', 'b']}
+    )
     JAWS::SDB['aaa'].select.each do |attr|
       p attr
     end

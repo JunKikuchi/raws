@@ -40,21 +40,24 @@ class JAWS::SDB::Adapter
       )
     end
 
-    def pack_attrs(attrs, replaces=[])
+    def pack_attrs(attrs, replaces=nil, prefix=nil)
       params = {}
 
       i = 0
       attrs.each do |key, val|
-        params["Attribute.#{i}.Replace"] = 'true' if replaces.include?(key)
+        if !replaces.nil? && replaces.include?(key)
+          params["#{prefix}Attribute.#{i}.Replace"] = 'true'
+        end
+
         if val.is_a? Array
           val.each do |v|
-            params["Attribute.#{i}.Name"]  = key
-            params["Attribute.#{i}.Value"] = v
+            params["#{prefix}Attribute.#{i}.Name"]  = key
+            params["#{prefix}Attribute.#{i}.Value"] = v
             i += 1
           end
         else
-          params["Attribute.#{i}.Name"]  = key
-          params["Attribute.#{i}.Value"] = val
+          params["#{prefix}Attribute.#{i}.Name"]  = key
+          params["#{prefix}Attribute.#{i}.Value"] = val
           i += 1
         end
       end
@@ -109,6 +112,26 @@ class JAWS::SDB::Adapter
           'Action'     => 'PutAttributes',
           'DomainName' => domain_name,
           'ItemName'   => item_name
+        ).merge(params)
+      )
+    end
+
+    def batch_put_attributes(domain_name, items={}, replaces={})
+      params = {}
+      
+      i = 0
+      items.each do |key, attrs|
+        params["Item.#{i}.ItemName"] = key
+        params.merge!(pack_attrs(attrs, replaces[key], "Item.#{i}."))
+        i += 1
+      end
+
+      JAWS.fetch(
+        'GET',
+        URI,
+        PARAMS.merge(
+          'Action'     => 'BatchPutAttributes',
+          'DomainName' => domain_name
         ).merge(params)
       )
     end
