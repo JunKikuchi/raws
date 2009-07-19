@@ -1,50 +1,66 @@
 class JAWS::SDB
-  class Adapter
-    module Adapter20090415
-      URI = 'https://sdb.amazonaws.com/'
-      PARAMS = {'Version' => '2009-04-15'}
+  autoload :Adapter, 'jaws/sdb/adapter'
+  autoload :Select,  'jaws/sdb/select'
 
-      def create_domain(name)
-      end
-
-      def delete_domain(name)
-      end
-
-      def list_domains(params={}, &block)
-        if params.key? 'NextToken' && params['NextToken'].nil?
-          params.delete 'NextToken'
-        end
-
-        data = JAWS.send(
-          'GET',
-          URI,
-          PARAMS.merge('Action' => 'ListDomains').merge(params)
-        )
-
-        name = data['ListDomainsResponse']['ListDomainsResult']
-        unless name['DomainName'].is_a? Array
-          name['DomainName'] = [name['DomainName']]
-        end
-
-        data
-      end
-    end
-
-    extend Adapter20090415
+  def self.create_domain(name)
+    Adapter.create_domain(name)
   end
 
-  def self.each(&block)
-    params = {'NextToken' => nil}
-    begin
-      data = Adapter.list_domains(
-        params
-      )['ListDomainsResponse']['ListDomainsResult']
+  def self.delete_domain(name)
+    Adapter.delete_domain(name)
+  end
 
-      data['DomainName'].each do |val|
+  def self.list_domains(params={})
+    Adapter.list_domains(params)
+  end
+
+  def self.select(exp, params={}, &block)
+    params = {'NextToken' => nil}
+
+    begin
+      data = Adapter.select(exp, params)['SelectResponse']['SelectResult']
+
+      data['Item'].each do |val|
         block.call(val)
       end
 
       params['NextToken'] = data['NextToken']
     end while params['NextToken']
+  end
+
+  def self.each(&block)
+    params = {'NextToken' => nil}
+
+    begin
+      data = list_domains(params)['ListDomainsResponse']['ListDomainsResult']
+
+      data['DomainName'].each do |val|
+        block.call(self.new(val))
+      end
+
+      params['NextToken'] = data['NextToken']
+    end while params['NextToken']
+  end
+
+  def self.[](name)
+    self.new(name)
+  end
+
+  attr_reader :name
+
+  def initialize(name)
+    @name = name
+  end
+
+  def create_domain
+    self.class.create_domain(name)
+  end
+
+  def delete_domain
+    self.class.delete_domain(name)
+  end
+
+  def select(output_list='*')
+    Select.new.columns(output_list).from(name)
   end
 end

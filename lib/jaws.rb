@@ -57,18 +57,14 @@ module JAWS
       name = tag.name #.gsub(/([A-Z])/, '_\1').gsub(/^_/, '').downcase.to_sym
 
       if tag.child.is_a? Nokogiri::XML::Text
-        if ret.key? name
-          if ret[name].is_a? Array
-            ret[name] << tag.content
-          else
-            ret[name] = [ret[name], tag.content]
-          end
-        else
-          ret[name] = tag.content
-        end
+        ret[name] = tag.content
       else
         if ret.key? name
-          ret[name] = [ret[name], {}]
+          if ret[name].is_a? Array
+            ret[name] << {}
+          else
+            ret[name] = [ret[name], {}]
+          end
           parse(tag, ret[name].last)
         else
           ret[name] = {}
@@ -83,7 +79,9 @@ module JAWS
   def self.send(http_verb, base_uri, params)
     get\
       "#{base_uri}?#{sign(http_verb, base_uri, params)}",
-      :on_success => lambda { |r| parse(Nokogiri::XML.parse(r.body)) },
+      :on_success => lambda { |r|
+        parse(Nokogiri::XML.parse(r.body))
+      },
       :on_failure => lambda { |r|
         raise Error.new(parse(Nokogiri::XML.parse(r.body)))
       }

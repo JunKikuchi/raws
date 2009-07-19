@@ -18,8 +18,16 @@ describe JAWS::SDB do
   end
 
   it 'each' do
-    JAWS::SDB.each do |val|
+    #p JAWS::SDB['aaa'].create_domain
+
+    #JAWS::SDB.each do |val|
+    #  p val
+    #end
+
+    JAWS::SDB['trailmap_account'].select.each do |val|
       p val
     end
+
+    #p JAWS::SDB['aaa'].delete_domain
   end
 end
