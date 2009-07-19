@@ -62,23 +62,41 @@ class JAWS::SDB::Adapter
       params
     end
 
-    def unpack_attrs(val)
-      ret = [val['Name']]
+    def unpack_attrs(attrs)
+      ret = {}
 
-      attrs = {}
-      val['Attribute'].map do |val|
+      attrs.map do |val|
         name, value = val['Name'], val['Value']
 
-        if attrs.key? name
-          attrs[name] = [attrs[name]] unless attrs[name].is_a? Array
-          attrs[name] << value
+        if ret.key? name
+          ret[name] = [ret[name]] unless ret[name].is_a? Array
+          ret[name] << value
         else
-          attrs[name] = value
+          ret[name] = value
         end
       end
-      ret << attrs
 
       ret
+    end
+
+    def get_attributes(domain_name, item_name, attrs=[])
+      params = {}
+
+      i = 0
+      attrs.each do |name|
+        params["AttributeName.#{i}"] = name
+        i += 1
+      end
+
+      JAWS.fetch(
+        'GET',
+        URI,
+        PARAMS.merge(
+          'Action'     => 'GetAttributes',
+          'DomainName' => domain_name,
+          'ItemName'   => item_name
+        ).merge(params)
+      )
     end
 
     def put_attributes(domain_name, item_name, attrs={}, replaces=[])

@@ -33,6 +33,8 @@ describe JAWS::SDB do
       p attr
     end
 
+    p JAWS::SDB::get('aaa', 'a')
+
     p JAWS::SDB::Adapter.delete_attributes('aaa', 'a')
     JAWS::SDB['aaa'].select.each do |attr|
       p attr

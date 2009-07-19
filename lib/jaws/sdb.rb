@@ -27,9 +27,18 @@ class JAWS::SDB
         )['SelectResponse']['SelectResult']
 
         data['Item'].each do |val|
-          block.call(Adapter.unpack_attrs(val))
+          block.call([val['Name'], Adapter.unpack_attrs(val['Attribute'])])
         end if data.key? 'Item'
       end while next_token = data['NextToken']
+    end
+
+    def get(domain_name, item_name, attrs=[])
+      data = Adapter.get_attributes(
+        domain_name,
+        item_name,
+        attrs
+      )['GetAttributesResponse']['GetAttributesResult']
+      Adapter.unpack_attrs(data['Attribute'])
     end
 
     def put(domain_name, item_name, attrs={}, replaces=[])
@@ -69,6 +78,10 @@ class JAWS::SDB
 
   def metadata
     self.class.metadata(domain_name)
+  end
+
+  def get(item_name, attrs=[])
+    self.class.get(domain_name, item_name, attrs)
   end
 
   def put(item_name, attrs={}, replaces=[])
