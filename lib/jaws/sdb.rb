@@ -45,8 +45,8 @@ class JAWS::SDB
       Adapter.put_attributes(domain_name, item_name, attrs, replaces)
     end
 
-    def batch_put(domain_name, item_name, attrs={}, replaces={})
-      Adapter.batch_put_attributes(domain_name, item_name, attrs, replaces)
+    def batch_put(domain_name, items={}, replaces={})
+      Adapter.batch_put_attributes(domain_name, items, replaces)
     end
 
     def each(&block)
@@ -92,8 +92,8 @@ class JAWS::SDB
     self.class.put(domain_name, item_name, attrs, replaces)
   end
 
-  def batch_puth(item_name, attrs={}, replaces={})
-    self.class.batch_put(domain_name, item_name, attrs, replaces)
+  def batch_puth(items={}, replaces={})
+    self.class.batch_put(domain_name, items, replaces)
   end
 
   def select(output_list='*')
