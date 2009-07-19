@@ -55,18 +55,22 @@ module JAWS
       doc.children.each do |tag|
         name = tag.name #.gsub(/([A-Z])/, '_\1').gsub(/^_/, '').downcase.to_sym
 
-        ret[name] = [] if multi.include?(name) && !ret[name].is_a?(Array)
+        unless ret[name].is_a? Array
+          if ret.key?(name)
+            ret[name] = [ret[name]]
+          elsif multi.include? name
+            ret[name] = []
+          end
+        end
 
         if tag.child.is_a? Nokogiri::XML::Text
           if ret.key? name
-            ret[name] = [ret[name]] unless ret[name].is_a? Array
             ret[name] << tag.content
           else
             ret[name] = tag.content
           end
         else
           if ret.key? name
-            ret[name] = [ret[name]] unless ret[name].is_a? Array
             ret[name] << {}
             parse(tag, multi, ret[name].last)
           else
