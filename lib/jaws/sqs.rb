@@ -1,0 +1,2 @@
+class JAWS::SQS
+end
