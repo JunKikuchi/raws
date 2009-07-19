@@ -2,58 +2,100 @@ class JAWS::SDB
   autoload :Adapter, 'jaws/sdb/adapter'
   autoload :Select,  'jaws/sdb/select'
 
-  def self.create_domain(name)
-    Adapter.create_domain(name)
-  end
+  class << self
+    def create(domain_name)
+      Adapter.create_domain(domain_name)
+    end
 
-  def self.delete_domain(name)
-    Adapter.delete_domain(name)
-  end
+    def delete(domain_name)
+      Adapter.delete_domain(domain_name)
+    end
 
-  def self.list_domains(next_token=nil, max_num=nil)
-    Adapter.list_domains(next_token, max_num)
-  end
+    def metadata(domain_name)
+      Adapter.domain_metadata(domain_name)
+    end
 
-  def self.select(expr, next_token=nil, &block)
-    begin
-      data = Adapter.select(expr, next_token)['SelectResponse']['SelectResult']
+    def list(next_token=nil, max_num=nil)
+      Adapter.list_domains(next_token, max_num)
+    end
 
-      data['Item'].each do |val|
-        block.call(val)
+    def unpack_attrs(val)
+      ret = [val['Name']]
+
+      attrs = {}
+      val['Attribute'].map do |val|
+        name, value = val['Name'], val['Value']
+
+        if attrs.key? name
+          attrs[name] = [attrs[name]] unless attrs[name].is_a? Array
+          attrs[name] << value
+        else
+          attrs[name] = value
+        end
       end
-    end while next_token = data['NextToken']
+      ret << attrs
+
+      ret
+    end
+    private :unpack_attrs
+
+    def select(expr, next_token=nil, &block)
+      begin
+        data = Adapter.select(
+          expr,
+          next_token
+        )['SelectResponse']['SelectResult']
+
+        data['Item'].each do |val|
+          block.call(unpack_attrs(val))
+        end if data.key? 'Item'
+      end while next_token = data['NextToken']
+    end
+
+    def put(domain_name, item_name, attrs={}, replaces=[])
+      Adapter.put_attributes(domain_name, item_name, attrs, replaces)
+    end
+
+    def each(&block)
+      next_token = nil
+      begin
+        data = list(next_token)['ListDomainsResponse']['ListDomainsResult']
+
+        data['DomainName'].each do |val|
+          block.call(self.new(val))
+        end
+      end while next_token = data['NextToken']
+    end
+
+    def [](domain_name)
+      @cache ||= {}
+      @cache[domain_name] ||= self.new(domain_name)
+    end
   end
 
-  def self.each(&block)
-    next_token = nil
-    begin
-      data = list_domains(next_token)['ListDomainsResponse']['ListDomainsResult']
+  attr_reader :domain_name
 
-      data['DomainName'].each do |val|
-        block.call(self.new(val))
-      end
-    end while next_token = data['NextToken']
+  def initialize(domain_name)
+    @domain_name = domain_name
   end
 
-  def self.[](name)
-    self.new(name)
+  def create
+    self.class.create(domain_name)
   end
 
-  attr_reader :name
-
-  def initialize(name)
-    @name = name
+  def delete
+    self.class.delete(domain_name)
   end
 
-  def create_domain
-    self.class.create_domain(name)
+  def metadata
+    self.class.metadata(domain_name)
   end
 
-  def delete_domain
-    self.class.delete_domain(name)
+  def put(item_name, attrs={}, replaces=[])
+    self.class.put(domain_name, item_name, attrs, replaces)
   end
 
   def select(output_list='*')
-    Select.new.columns(output_list).from(name)
+    Select.new.columns(output_list).from(domain_name)
   end
 end
