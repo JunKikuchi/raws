@@ -19,26 +19,6 @@ class JAWS::SDB
       Adapter.list_domains(next_token, max_num)
     end
 
-    def unpack_attrs(val)
-      ret = [val['Name']]
-
-      attrs = {}
-      val['Attribute'].map do |val|
-        name, value = val['Name'], val['Value']
-
-        if attrs.key? name
-          attrs[name] = [attrs[name]] unless attrs[name].is_a? Array
-          attrs[name] << value
-        else
-          attrs[name] = value
-        end
-      end
-      ret << attrs
-
-      ret
-    end
-    private :unpack_attrs
-
     def select(expr, next_token=nil, &block)
       begin
         data = Adapter.select(
@@ -47,7 +27,7 @@ class JAWS::SDB
         )['SelectResponse']['SelectResult']
 
         data['Item'].each do |val|
-          block.call(unpack_attrs(val))
+          block.call(Adapter.unpack_attrs(val))
         end if data.key? 'Item'
       end while next_token = data['NextToken']
     end

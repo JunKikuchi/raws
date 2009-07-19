@@ -61,7 +61,25 @@ class JAWS::SDB::Adapter
 
       params
     end
-    private :pack_attrs
+
+    def unpack_attrs(val)
+      ret = [val['Name']]
+
+      attrs = {}
+      val['Attribute'].map do |val|
+        name, value = val['Name'], val['Value']
+
+        if attrs.key? name
+          attrs[name] = [attrs[name]] unless attrs[name].is_a? Array
+          attrs[name] << value
+        else
+          attrs[name] = value
+        end
+      end
+      ret << attrs
+
+      ret
+    end
 
     def put_attributes(domain_name, item_name, attrs={}, replaces=[])
       params = pack_attrs(attrs, replaces)
