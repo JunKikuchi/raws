@@ -45,6 +45,10 @@ class JAWS::SDB
       Adapter.put_attributes(domain_name, item_name, attrs, replaces)
     end
 
+    def batch_put(domain_name, item_name, attrs={}, replaces={})
+      Adapter.batch_put_attributes(domain_name, item_name, attrs, replaces)
+    end
+
     def each(&block)
       next_token = nil
       begin
@@ -86,6 +90,10 @@ class JAWS::SDB
 
   def put(item_name, attrs={}, replaces=[])
     self.class.put(domain_name, item_name, attrs, replaces)
+  end
+
+  def batch_puth(item_name, attrs={}, replaces={})
+    self.class.batch_put(domain_name, item_name, attrs, replaces)
   end
 
   def select(output_list='*')
