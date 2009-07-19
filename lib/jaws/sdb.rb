@@ -10,36 +10,29 @@ class JAWS::SDB
     Adapter.delete_domain(name)
   end
 
-  def self.list_domains(params={})
-    Adapter.list_domains(params)
+  def self.list_domains(next_token=nil, max_num=nil)
+    Adapter.list_domains(next_token, max_num)
   end
 
-  def self.select(exp, params={}, &block)
-    params = {'NextToken' => nil}
-
+  def self.select(expr, next_token=nil, &block)
     begin
-      data = Adapter.select(exp, params)['SelectResponse']['SelectResult']
+      data = Adapter.select(expr, next_token)['SelectResponse']['SelectResult']
 
       data['Item'].each do |val|
         block.call(val)
       end
-
-      params['NextToken'] = data['NextToken']
-    end while params['NextToken']
+    end while next_token = data['NextToken']
   end
 
   def self.each(&block)
-    params = {'NextToken' => nil}
-
+    next_token = nil
     begin
-      data = list_domains(params)['ListDomainsResponse']['ListDomainsResult']
+      data = list_domains(next_token)['ListDomainsResponse']['ListDomainsResult']
 
       data['DomainName'].each do |val|
         block.call(self.new(val))
       end
-
-      params['NextToken'] = data['NextToken']
-    end while params['NextToken']
+    end while next_token = data['NextToken']
   end
 
   def self.[](name)

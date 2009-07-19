@@ -19,29 +19,21 @@ class JAWS::SDB::Adapter
       )
     end
 
-    def list_domains(params={}, &block)
-      if params.key? 'NextToken' && params['NextToken'].nil?
-        params.delete 'NextToken'
-      end
+    def list_domains(next_token=nil, max_num=nil, &block)
+      params = {}
+      params['NextToken']          = next_token if next_token
+      params['MaxNumberOfDomains'] = max_num    if max_num
 
-      data = JAWS.send(
+      JAWS.send(
         'GET',
         URI,
         PARAMS.merge('Action' => 'ListDomains').merge(params)
       )
-
-      name = data['ListDomainsResponse']['ListDomainsResult']
-      unless name['DomainName'].is_a? Array
-        name['DomainName'] = [name['DomainName']]
-      end
-
-      data
     end
 
-    def select(exp, params={})
-      if params.key? 'NextToken' && params['NextToken'].nil?
-        params.delete 'NextToken'
-      end
+    def select(exp, next_token=nil)
+      params = {}
+      params['NextToken'] = next_token if next_token
 
       JAWS.send(
         'GET',

@@ -57,14 +57,16 @@ module JAWS
       name = tag.name #.gsub(/([A-Z])/, '_\1').gsub(/^_/, '').downcase.to_sym
 
       if tag.child.is_a? Nokogiri::XML::Text
-        ret[name] = tag.content
+        if ret.key? name
+          ret[name] = [ret[name]] unless ret[name].is_a? Array
+          ret[name] << tag.content
+        else
+          ret[name] = tag.content
+        end
       else
         if ret.key? name
-          if ret[name].is_a? Array
-            ret[name] << {}
-          else
-            ret[name] = [ret[name], {}]
-          end
+          ret[name] = [ret[name], {}] unless ret[name].is_a? Array
+          ret[name] << {}
           parse(tag, ret[name].last)
         else
           ret[name] = {}

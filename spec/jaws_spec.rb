@@ -20,13 +20,13 @@ describe JAWS::SDB do
   it 'each' do
     #p JAWS::SDB['aaa'].create_domain
 
-    #JAWS::SDB.each do |val|
-    #  p val
-    #end
-
-    JAWS::SDB['trailmap_account'].select.each do |val|
+    JAWS::SDB.each do |val|
       p val
     end
+
+    #JAWS::SDB['trailmap_account'].select.each do |val|
+    #  p val
+    #end
 
     #p JAWS::SDB['aaa'].delete_domain
   end
