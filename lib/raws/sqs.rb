@@ -74,8 +74,16 @@ class RAWS::SQS
       Adapter.change_message_visibility(queue_url, handle, timeout)
     end
 
-    def delete(queue_url, handle)
+    def delete_message(queue_url, handle)
       Adapter.delete_message(queue_url, handle)
+    end
+
+    def add_permission(queue_url, label, permission)
+      Adapter.add_permission(queue_url, label, permission)
+    end
+
+    def remove_permission(queue_url, label)
+      Adapter.remove_permission(queue_url, label)
     end
   end
 
@@ -135,6 +143,14 @@ class RAWS::SQS
   end
 
   def delete_message(handle)
-    self.class.delete(queue_url, handle)
+    self.class.delete_message(queue_url, handle)
+  end
+
+  def add_permission(label, permission)
+    self.class.add_permission(queue_url, label, permission)
+  end
+
+  def remove_permission(label)
+    self.class.remove_permission(queue_url, label)
   end
 end

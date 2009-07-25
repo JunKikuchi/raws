@@ -108,6 +108,40 @@ class RAWS::SQS::Adapter
 
       RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
+
+    def pack_permission(params)
+      ret = {}
+
+      i = 1
+      params.each do |id, permissions|
+        permissions.each do |permission|
+          ret["AWSAccountId.#{i}"] = id
+          ret["ActionName.#{i}"]   = permission
+          i += 1
+        end
+      end
+
+      ret
+    end
+
+    def add_permission(queue_url, label, permission)
+      params = {
+        'Action' => 'AddPermission',
+        'Label'  => label
+      }
+      params.merge!(pack_permission(permission))
+
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+    end
+
+    def remove_permission(queue_url, label)
+      params = {
+        'Action' => 'RemovePermission',
+        'Label'  => label
+      }
+
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+    end
   end
 
   extend Adapter20090201

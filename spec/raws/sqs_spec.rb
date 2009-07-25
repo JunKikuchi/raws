@@ -57,6 +57,8 @@ describe RAWS::SQS do
         send
         receive
         delete_message
+        add_permission
+        remove_permission
       '.each do |val|
         @queue.should respond_to val.to_sym
       end
@@ -145,5 +147,18 @@ describe RAWS::SQS do
         sleep 5
       end
     end
+
+    it 'add_permission'
+    it 'remove_permission'
+
+=begin
+    it 'add_permission' do
+      @queue.add_permission('p1', RAWS.aws_access_key_id => ['SendMessage'])
+    end
+
+    it 'remove_permission' do
+      @queue.remove_permission('p1')
+    end
+=end
   end
 end
