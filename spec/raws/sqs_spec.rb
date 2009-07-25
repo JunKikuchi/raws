@@ -56,7 +56,7 @@ describe RAWS::SQS do
         set_attrs
         send
         receive
-        delete
+        delete_message
       '.each do |val|
         @queue.should respond_to val.to_sym
       end
@@ -109,6 +109,40 @@ describe RAWS::SQS do
           msg.delete
           i += 1
         end
+      end
+    end
+
+    it 'change_message_visibility' do
+=begin
+      5.times do |i|
+        p i
+        @queue.receive.each do |msg|
+          msg.delete
+        end
+        sleep 5
+      end
+=end
+      @queue.send('change message visibility')
+
+      msg_id, time = nil, nil
+      loop do
+        if msg = @queue.receive.first
+          #p Time.now
+          #p msg
+          unless time
+            msg_id = msg.data['MessageId']
+            time   = Time.now.to_i
+          else
+            if msg_id == msg.data['MessageId']
+              (time + 10).should <= Time.now.to_i
+              msg.delete
+              break
+            end
+          end
+          msg.visibility = 10
+        end
+        #p 'sleep'
+        sleep 5
       end
     end
   end

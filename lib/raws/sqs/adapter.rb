@@ -90,6 +90,16 @@ class RAWS::SQS::Adapter
       )
     end
 
+    def change_message_visibility(queue_url, receipt_handle, timeout)
+      params = {
+        'Action'            => 'ChangeMessageVisibility',
+        'ReceiptHandle'     => receipt_handle,
+        'VisibilityTimeout' => timeout
+      }
+
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+    end
+
     def delete_message(queue_url, receipt_handle)
       params = {
         'Action'        => 'DeleteMessage',

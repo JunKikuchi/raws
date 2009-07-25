@@ -70,6 +70,10 @@ class RAWS::SQS
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
 
+    def change_message_visibility(queue_url, handle, timeout)
+      Adapter.change_message_visibility(queue_url, handle, timeout)
+    end
+
     def delete(queue_url, handle)
       Adapter.delete_message(queue_url, handle)
     end
@@ -87,8 +91,12 @@ class RAWS::SQS
       data['Body']
     end
 
+    def visibility=(timeout)
+      queue.change_message_visibility data['ReceiptHandle'], timeout
+    end
+
     def delete
-      queue.delete data['ReceiptHandle']
+      queue.delete_message data['ReceiptHandle']
     end
   end
 
@@ -122,7 +130,11 @@ class RAWS::SQS
     end
   end
 
-  def delete(handle)
+  def change_message_visibility(handle, timeout)
+    self.class.change_message_visibility(queue_url, handle, timeout)
+  end
+
+  def delete_message(handle)
     self.class.delete(queue_url, handle)
   end
 end
