@@ -13,11 +13,12 @@ module JAWS
   include Typhoeus
 
   class Error < StandardError
+    attr_reader :response
     attr_reader :data
 
-    def initialize(data)
+    def initialize(response, data)
       super()
-      @data = data
+      @response, @data = response, data
     end
   end
 
@@ -84,15 +85,15 @@ module JAWS
     end
 
     def fetch(http_verb, base_uri, params, multi=[])
-      get\
+      get(
         "#{base_uri}?#{sign(http_verb, base_uri, params)}",
         :on_success => lambda { |r|
           parse(Nokogiri::XML.parse(r.body), multi)
         },
         :on_failure => lambda { |r|
-          p r.body
-          raise Error.new(parse(Nokogiri::XML.parse(r.body)))
+          raise Error.new(r, parse(Nokogiri::XML.parse(r.body)))
         }
+      )
     end
   end
 
