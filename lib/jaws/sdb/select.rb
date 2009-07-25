@@ -53,7 +53,7 @@ class JAWS::SDB::Select
     s.push('order by', @sort     ) if @sort
     s.push('limit',    @limit    ) if @limit
 
-    [s.join(' '), *@values]
+    [s.join(' '), @values]
   end
 
   def each(&block)

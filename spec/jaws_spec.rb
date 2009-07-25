@@ -49,14 +49,32 @@ describe JAWS::SDB do
     end
   end
 
-  before do
+  before :all do
     @sdb = JAWS::SDB[JAWS_SDB_DOMAIN]
-    @sdb.create_domain
-    sleep 60
+    #@sdb.create_domain
+    #sleep 60
+=begin
+    @sdb.select.each do |val|
+      @sdb.delete(val.first)
+    end
+
+    @sdb.put('100', 'a' => 10)
+    @sdb.put('200', 'a' => [10, 20], 'b' => 20)
+    @sdb.put('300', 'a' => [10, 20, 30], 'b' => 20, 'c' => 30)
+
+    @sdb.batch_put(
+      '400' => {'a' => [10, 20, 30, 40]},
+      '500' => {'a' => [10, 20, 30, 40, 50]},
+      '600' => {'a' => [10, 20, 30, 40, 50, 60]}
+    )
+=end
   end
 
-  after do
-    @sdb.delete_domain
+  after :all do
+    #@sdb.delete_domain
+  end
+
+  before do
   end
 
   it 'metadata' do
@@ -74,50 +92,25 @@ describe JAWS::SDB do
     end
   end
 
-  it 'each' do
-=begin
-    p JAWS::SDB::Adapter.put_attributes('aaa', 'a', {'a' => [1, 2, 3]})
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
+  it 'get' do
+    @sdb.get('100').should == {'a' => '10'}
+    @sdb.get('200').should == {'a' => ['10', '20'], 'b' => '20'}
+    @sdb.get('400').should == {'a' => ['10', '20', '30', '40']}
+  end
+
+  it 'select' do
+    keys = 6.times.map do |i|
+      "#{i+1}00"
     end
 
-    p JAWS::SDB::Adapter.put_attributes('aaa', 'a', {'a' => [10, 20, 30]})
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
+    @sdb.select.each do |val|
+      keys.should include(val.first)
     end
+  end
 
-    p JAWS::SDB::Adapter.put_attributes('aaa', 'a', {'a' => [100, 200]}, ['a'])
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
+  it 'select.where("a = ?", 10)' do
+    @sdb.select.where('a = ?', 30).each do |val|
+      %w'300 400 500 600'.should include(val.first)
     end
-
-    p JAWS::SDB::get('aaa', 'a')
-
-    p JAWS::SDB::Adapter.delete_attributes('aaa', 'a')
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
-    end
-
-    p JAWS::SDB::Adapter.batch_put_attributes(
-      'aaa',
-      {
-        'a' => {'a' => [1, 2, 3], 'b' => 4},
-        'b' => {'a' => [10, 20, 30], 'b' => 40},
-        'c' => {'a' => [100, 200, 300], 'b' => 400}
-      }
-    )
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
-    end
-
-    p JAWS::SDB::Adapter.batch_put_attributes(
-      'aaa',
-      {'a' => {'a' => [100], 'b' => 400} },
-      {'a' => ['a', 'b']}
-    )
-    JAWS::SDB['aaa'].select.each do |attr|
-      p attr
-    end
-=end
   end
 end

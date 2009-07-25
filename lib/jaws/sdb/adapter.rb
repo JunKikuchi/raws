@@ -70,7 +70,11 @@ class JAWS::SDB::Adapter
     def unpack_attrs(attrs)
       ret = {}
 
-      attrs.map do |val|
+      if attrs.is_a? Array
+        attrs
+      else
+        [attrs]
+      end.map do |val|
         name, value = val['Name'], val['Value']
 
         if ret.key? name
@@ -79,7 +83,7 @@ class JAWS::SDB::Adapter
         else
           ret[name] = value
         end
-      end
+      end if attrs
 
       ret
     end
@@ -160,27 +164,27 @@ class JAWS::SDB::Adapter
       end
     end
 
-    def query_expr(expr, params)
+    def query_expr(expr, *params)
       expr.gsub(/(\\)?(\?)/) do
         if $1
           "?"
         else
-          "'#{params.shift.gsub(/(['])/, '\1\1')}'"
+          "'#{params.shift.to_s.gsub(/(['])/, '\1\1')}'"
         end
       end
     end
 
     def select(expr, params=[], next_token=nil)
-      params = {}
-      params['NextToken'] = next_token if next_token
+      _params = {}
+      _params['NextToken'] = next_token if next_token
 
       JAWS.fetch(
         'GET',
         URI,
         PARAMS.merge(
           'Action' => 'Select',
-          'SelectExpression' => query_expr(expr, params)
-        ).merge(params),
+          'SelectExpression' => query_expr(expr, *params)
+        ).merge(_params),
         ['Item', 'Attribute']
       )
     end
