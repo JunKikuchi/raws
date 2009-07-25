@@ -1,4 +1,4 @@
-class JAWS::SQS::Adapter
+class RAWS::SQS::Adapter
   module Adapter20090201
     URI = 'https://queue.amazonaws.com/'
     PARAMS = {'Version' => '2009-02-01'}
@@ -10,20 +10,20 @@ class JAWS::SQS::Adapter
       }
       params['DefaultVisibilityTimeout'] = timeout if timeout
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def delete_queue(queue_url)
       params = {'Action' => 'DeleteQueue'}
 
-      JAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
 
     def list_queues(prefix=nil)
       params = {'Action' => 'ListQueues'}
       params['QueueNamePrefix'] = prefix if prefix
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params), 'QueueUrl')
+      RAWS.fetch('GET', URI, PARAMS.merge(params), 'QueueUrl')
     end
 
     def pack_attrs(attrs)
@@ -50,7 +50,7 @@ class JAWS::SQS::Adapter
         params.merge!(pack_attrs(attrs))
       end
 
-      JAWS.fetch(
+      RAWS.fetch(
         'GET',
         queue_url,
         PARAMS.merge(params),
@@ -60,9 +60,9 @@ class JAWS::SQS::Adapter
 
     def set_queue_attributes(queue_url, attrs={})
       params = {'Action' => 'SetQueueAttributes'}
-      params.merge!(JAWS.pack_attrs(attrs))
+      params.merge!(RAWS.pack_attrs(attrs))
 
-      JAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
 
     def send_message(queue_url, msg)
@@ -71,7 +71,7 @@ class JAWS::SQS::Adapter
         'MessageBody' => msg
       }
 
-      JAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
 
     def receive_message(queue_url, num_msgs=nil, timeout=nil, *attrs)
@@ -80,7 +80,7 @@ class JAWS::SQS::Adapter
       params['VisibilityTimeout']   = timeout  if timeout
       params.merge!(pack_attrs(attrs))
 
-      JAWS.fetch('GET', queue_url, PARAMS.merge(params), 'Message', 'Attribute')
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params), 'Message', 'Attribute')
     end
   end
 

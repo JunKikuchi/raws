@@ -9,7 +9,7 @@ require 'nokogiri'
 path = File.expand_path(File.dirname(__FILE__))
 $:.unshift(path) unless $:.include?(path)
 
-module JAWS
+module RAWS
   include Typhoeus
 
   class Error < StandardError
@@ -148,6 +148,6 @@ module JAWS
     end
   end
 
-  autoload :SDB, 'jaws/sdb'
-  autoload :SQS, 'jaws/sqs'
+  autoload :SDB, 'raws/sdb'
+  autoload :SQS, 'raws/sqs'
 end

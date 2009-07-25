@@ -1,6 +1,6 @@
 require 'spec/spec_config'
 
-describe JAWS::SDB do
+describe RAWS::SDB do
   describe 'class' do
     it 'methods' do
       %w'
@@ -16,16 +16,16 @@ describe JAWS::SDB do
         batch_put
         delete
       '.each do |val|
-        JAWS::SDB.should respond_to val.to_sym
+        RAWS::SDB.should respond_to val.to_sym
       end
     end
 
     it 'create_domain' do
-      #JAWS::SDB.create_domain(JAWS_SDB_DOMAIN)
-      #JAWS::SDB.put('100', 'a' => 10)
-      #JAWS::SDB.put('200', 'a' => [10, 20],     'b' => 20)
-      #JAWS::SDB.put('300', 'a' => [10, 20, 30], 'b' => 20, 'c' => 30)
-      #JAWS::SDB.batch_put(
+      #RAWS::SDB.create_domain(RAWS_SDB_DOMAIN)
+      #RAWS::SDB.put('100', 'a' => 10)
+      #RAWS::SDB.put('200', 'a' => [10, 20],     'b' => 20)
+      #RAWS::SDB.put('300', 'a' => [10, 20, 30], 'b' => 20, 'c' => 30)
+      #RAWS::SDB.batch_put(
       #  "400" => {"a"=>["10", "20", "30", "40"]},
       #  "500" => {"a"=>["10", "20", "30", "40", "50"]},
       #  "600" => {"a"=>["10", "20", "30", "40", "50", "60"]}
@@ -33,11 +33,11 @@ describe JAWS::SDB do
     end
 
     it 'delete_domain' do
-      #JAWS::SDB.delete_domain(JAWS_SDB_DOMAIN)
+      #RAWS::SDB.delete_domain(RAWS_SDB_DOMAIN)
     end
 
     it 'metadata' do
-      data = JAWS::SDB.metadata(JAWS_SDB_DOMAIN)
+      data = RAWS::SDB.metadata(RAWS_SDB_DOMAIN)
       data.should have_key('Timestamp')
       data.should have_key('ItemCount')
       data.should have_key('AttributeValueCount')
@@ -48,66 +48,66 @@ describe JAWS::SDB do
     end
 
     it 'list' do
-      data = JAWS::SDB.list
+      data = RAWS::SDB.list
       data.should have_key('DomainName')
 
-      data = JAWS::SDB.list(nil, 1)
+      data = RAWS::SDB.list(nil, 1)
       data['DomainName'].should be_kind_of(Array)
       data['DomainName'].size.should == 1
       data.should have_key('NextToken')
     end
 
     it 'each' do
-      JAWS::SDB.each do |domain|
-        domain.should be_kind_of(JAWS::SDB)
+      RAWS::SDB.each do |domain|
+        domain.should be_kind_of(RAWS::SDB)
       end
     end
 
     it '[]' do
-      JAWS::SDB[JAWS_SDB_DOMAIN].should be_kind_of(JAWS::SDB)
+      RAWS::SDB[RAWS_SDB_DOMAIN].should be_kind_of(RAWS::SDB)
     end
 
     it 'select' do
-      JAWS::SDB[JAWS_SDB_DOMAIN].select.each do |val|
+      RAWS::SDB[RAWS_SDB_DOMAIN].select.each do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
 
-      JAWS::SDB[JAWS_SDB_DOMAIN].select.where('b = ?', 20).each do |val|
+      RAWS::SDB[RAWS_SDB_DOMAIN].select.where('b = ?', 20).each do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
     end
 
     it 'get' do
-      JAWS::SDB[JAWS_SDB_DOMAIN].get('000').should be_nil
+      RAWS::SDB[RAWS_SDB_DOMAIN].get('000').should be_nil
 
-      data = JAWS::SDB[JAWS_SDB_DOMAIN].get('100')
+      data = RAWS::SDB[RAWS_SDB_DOMAIN].get('100')
       data.should == {'a' => '10'}
 
-      data = JAWS::SDB[JAWS_SDB_DOMAIN].get('200')
+      data = RAWS::SDB[RAWS_SDB_DOMAIN].get('200')
       data.should == {'a' => ['10', '20'], 'b' => '20'}
 
-      data = JAWS::SDB[JAWS_SDB_DOMAIN].get('300')
+      data = RAWS::SDB[RAWS_SDB_DOMAIN].get('300')
       data.should == {'a' => ['10', '20', '30'], 'b' => '20', 'c' => '30'}
     end
 
     it 'put, get & delete' do
-      JAWS::SDB[JAWS_SDB_DOMAIN].put('10', 'a' => [1])
-      JAWS::SDB[JAWS_SDB_DOMAIN].put('10', 'a' => 2)
+      RAWS::SDB[RAWS_SDB_DOMAIN].put('10', 'a' => [1])
+      RAWS::SDB[RAWS_SDB_DOMAIN].put('10', 'a' => 2)
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('10')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('10')
         if data == {'a' => ['1', '2']}
           data.should == {'a' => ['1', '2']}
           break;
         end
       end
 
-      JAWS::SDB[JAWS_SDB_DOMAIN].delete('10')
+      RAWS::SDB[RAWS_SDB_DOMAIN].delete('10')
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('10')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('10')
         unless data
           data.should be_nil
         end
@@ -115,41 +115,41 @@ describe JAWS::SDB do
     end
 
     it 'batch_put & delete' do
-      JAWS::SDB.batch_put(
+      RAWS::SDB.batch_put(
         "1" => {"a"=>["10"]},
         "2" => {"a"=>["20"]},
         "3" => {"a"=>["30"]}
       )
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('1')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('1')
         if data
           data.should == {'a' => '10'}
-          JAWS::SDB[JAWS_SDB_DOMAIN].delete('1')
+          RAWS::SDB[RAWS_SDB_DOMAIN].delete('1')
           break
         end
       end
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('2')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('2')
         if data
           data.should == {'a' => '20'}
-          JAWS::SDB[JAWS_SDB_DOMAIN].delete('2')
+          RAWS::SDB[RAWS_SDB_DOMAIN].delete('2')
           break
         end
       end
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('3')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('3')
         if data
           data.should == {'a' => '30'}
-          JAWS::SDB[JAWS_SDB_DOMAIN].delete('3')
+          RAWS::SDB[RAWS_SDB_DOMAIN].delete('3')
           break
         end
       end
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('1')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('1')
         unless data
           data.should be_nil
           break
@@ -157,7 +157,7 @@ describe JAWS::SDB do
       end
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('2')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('2')
         unless data
           data.should be_nil
           break
@@ -165,7 +165,7 @@ describe JAWS::SDB do
       end
 
       5.times do
-        data = JAWS::SDB[JAWS_SDB_DOMAIN].get('3')
+        data = RAWS::SDB[RAWS_SDB_DOMAIN].get('3')
         unless data
           data.should be_nil
           break
@@ -176,7 +176,7 @@ describe JAWS::SDB do
 
   describe 'object' do
     before do
-      @sdb = JAWS::SDB[JAWS_SDB_DOMAIN]
+      @sdb = RAWS::SDB[RAWS_SDB_DOMAIN]
     end
 
     it 'method' do

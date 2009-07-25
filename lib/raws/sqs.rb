@@ -1,5 +1,5 @@
-class JAWS::SQS
-  autoload :Adapter, 'jaws/sqs/adapter'
+class RAWS::SQS
+  autoload :Adapter, 'raws/sqs/adapter'
 
   class << self
     def create_queue(queue_name, timeout=nil)

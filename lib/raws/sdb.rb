@@ -1,6 +1,6 @@
-class JAWS::SDB
-  autoload :Adapter, 'jaws/sdb/adapter'
-  autoload :Select,  'jaws/sdb/select'
+class RAWS::SDB
+  autoload :Adapter, 'raws/sdb/adapter'
+  autoload :Select,  'raws/sdb/select'
 
   class << self
     def create_domain(domain_name)

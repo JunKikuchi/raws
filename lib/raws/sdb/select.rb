@@ -1,4 +1,4 @@
-class JAWS::SDB::Select
+class RAWS::SDB::Select
   RESERVED_KEYWORD = %w'or and not from where select like null is order by asc desc in between intersection limit every'
 
   def initialize
@@ -46,7 +46,7 @@ class JAWS::SDB::Select
       'select',
       @output_list,
       'from',
-      ::JAWS::SDB::Adapter.quote(@domain)
+      ::RAWS::SDB::Adapter.quote(@domain)
     ]
 
     s.push('where',    @condition) if @condition
@@ -57,7 +57,7 @@ class JAWS::SDB::Select
   end
 
   def each(&block)
-    JAWS::SDB.select(*to_sql, &block)
+    RAWS::SDB.select(*to_sql, &block)
     #do |key, val|
     #  block.call(*attr_filter(key, val))
     #end

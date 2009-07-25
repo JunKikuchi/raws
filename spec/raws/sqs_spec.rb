@@ -1,6 +1,6 @@
 require 'spec/spec_config'
 
-describe JAWS::SQS do
+describe RAWS::SQS do
   describe 'class' do
     it 'methods' do
       %w'
@@ -14,7 +14,7 @@ describe JAWS::SQS do
         send
         receive
       '.each do |val|
-        JAWS::SQS.should respond_to val.to_sym
+        RAWS::SQS.should respond_to val.to_sym
       end
     end
   end

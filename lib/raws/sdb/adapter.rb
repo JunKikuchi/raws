@@ -1,4 +1,4 @@
-class JAWS::SDB::Adapter
+class RAWS::SDB::Adapter
   module Adapter20090415
     URI = 'https://sdb.amazonaws.com/'
     PARAMS = {'Version' => '2009-04-15'}
@@ -11,7 +11,7 @@ class JAWS::SDB::Adapter
         'DomainName' => domain_name
       }
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def delete_domain(domain_name)
@@ -20,7 +20,7 @@ class JAWS::SDB::Adapter
         'DomainName' => domain_name
       }
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def domain_metadata(domain_name)
@@ -29,7 +29,7 @@ class JAWS::SDB::Adapter
         'DomainName' => domain_name
       }
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def list_domains(next_token=nil, max_num=nil, &block)
@@ -37,7 +37,7 @@ class JAWS::SDB::Adapter
       params['NextToken']          = next_token if next_token
       params['MaxNumberOfDomains'] = max_num    if max_num
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
+      RAWS.fetch('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
     end
 
     def get_attributes(domain_name, item_name, *attrs)
@@ -53,7 +53,7 @@ class JAWS::SDB::Adapter
         i += 1
       end
 
-      JAWS.fetch(
+      RAWS.fetch(
         'GET',
         URI,
         PARAMS.merge(params),
@@ -68,9 +68,9 @@ class JAWS::SDB::Adapter
         'DomainName' => domain_name,
         'ItemName'   => item_name
       }
-      params.merge!(JAWS.pack_attrs(attrs, replaces))
+      params.merge!(RAWS.pack_attrs(attrs, replaces))
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def batch_put_attributes(domain_name, items={}, replaces={})
@@ -82,11 +82,11 @@ class JAWS::SDB::Adapter
       i = 0
       items.each do |key, attrs|
         params["Item.#{i}.ItemName"] = key
-        params.merge!(JAWS.pack_attrs(attrs, replaces[key], "Item.#{i}."))
+        params.merge!(RAWS.pack_attrs(attrs, replaces[key], "Item.#{i}."))
         i += 1
       end
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def delete_attributes(domain_name, item_name, attrs={})
@@ -95,9 +95,9 @@ class JAWS::SDB::Adapter
         'DomainName' => domain_name,
         'ItemName'   => item_name
       }
-      params.merge!(JAWS.pack_attrs(attrs))
+      params.merge!(RAWS.pack_attrs(attrs))
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def quote(val)
@@ -125,7 +125,7 @@ class JAWS::SDB::Adapter
       }
       params['NextToken'] = next_token if next_token
 
-      JAWS.fetch(
+      RAWS.fetch(
         'GET',
         URI,
         PARAMS.merge(params),

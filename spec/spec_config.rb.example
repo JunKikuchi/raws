@@ -4,7 +4,7 @@ JAWS.aws_secret_access_key = AWS_SECRET_ACCESS_KEY
 JAWS_SDB_DOMAIN = AWS_SDB_DOMAIN
 
 require 'rubygems'
-require 'lib/jaws'
+require 'lib/raws'
 
 require 'yaml'
 def d(val)

@@ -2,15 +2,15 @@ require 'rubygems'
 require 'rake/gempackagetask'
 require 'spec/rake/spectask'
 
-NAME = 'jaws'
+NAME = 'raws'
 VERS = '0.0.1'
 
-desc 'Packages jaws'
+desc 'Packages raws'
 spec = Gem::Specification.new do |s|
   s.name = NAME
   s.version = VERS
   s.platform = Gem::Platform::RUBY
-  s.summary = "JAWS"
+  s.summary = "RAWS"
   s.description = s.summary
   s.author = "Jun Kikuchi"
   s.email = "kikuchi@bonnou.com"
