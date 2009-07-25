@@ -6,90 +6,46 @@ class JAWS::SDB::Adapter
     REXP_NAME = /^[a-zA-Z_$]/
 
     def create_domain(domain_name)
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge('Action' => 'CreateDomain', 'DomainName' => domain_name)
-      )
+      params = {
+        'Action'     => 'CreateDomain',
+        'DomainName' => domain_name
+      }
+
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def delete_domain(domain_name)
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge('Action' => 'DeleteDomain', 'DomainName' => domain_name)
-      )
+      params = {
+        'Action'     => 'DeleteDomain',
+        'DomainName' => domain_name
+      }
+
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def domain_metadata(domain_name)
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge('Action' => 'DomainMetadata', 'DomainName' => domain_name)
-      )
+      params = {
+        'Action'     => 'DomainMetadata',
+        'DomainName' => domain_name
+      }
+
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def list_domains(next_token=nil, max_num=nil, &block)
-      params = {}
+      params = {'Action' => 'ListDomains'}
       params['NextToken']          = next_token if next_token
       params['MaxNumberOfDomains'] = max_num    if max_num
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge('Action' => 'ListDomains').merge(params),
-        ['DomainName']
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params), 'DomainName')
     end
 
-    def pack_attrs(attrs, replaces=nil, prefix=nil)
-      params = {}
-
-      i = 0
-      attrs.each do |key, val|
-        if !replaces.nil? && replaces.include?(key)
-          params["#{prefix}Attribute.#{i}.Replace"] = 'true'
-        end
-
-        if val.is_a? Array
-          val.each do |v|
-            params["#{prefix}Attribute.#{i}.Name"]  = key
-            params["#{prefix}Attribute.#{i}.Value"] = v
-            i += 1
-          end
-        else
-          params["#{prefix}Attribute.#{i}.Name"]  = key
-          params["#{prefix}Attribute.#{i}.Value"] = val
-          i += 1
-        end
-      end
-
-      params
-    end
-
-    def unpack_attrs(attrs)
-      ret = {}
-
-      if attrs.is_a? Array
-        attrs
-      else
-        [attrs]
-      end.map do |val|
-        name, value = val['Name'], val['Value']
-
-        if ret.key? name
-          ret[name] = [ret[name]] unless ret[name].is_a? Array
-          ret[name] << value
-        else
-          ret[name] = value
-        end
-      end if attrs
-
-      ret
-    end
-
-    def get_attributes(domain_name, item_name, attrs=[])
-      params = {}
+    def get_attributes(domain_name, item_name, *attrs)
+      params = {
+        'Action'     => 'GetAttributes',
+        'DomainName' => domain_name,
+        'ItemName'   => item_name
+      }
 
       i = 0
       attrs.each do |name|
@@ -97,63 +53,45 @@ class JAWS::SDB::Adapter
         i += 1
       end
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge(
-          'Action'     => 'GetAttributes',
-          'DomainName' => domain_name,
-          'ItemName'   => item_name
-        ).merge(params)
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
-    def put_attributes(domain_name, item_name, attrs={}, replaces=[])
-      params = pack_attrs(attrs, replaces)
+    def put_attributes(domain_name, item_name, attrs={}, *replaces)
+      params = {
+        'Action'     => 'PutAttributes',
+        'DomainName' => domain_name,
+        'ItemName'   => item_name
+      }
+      params.merge!(JAWS.pack_attrs(attrs, replaces))
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge(
-          'Action'     => 'PutAttributes',
-          'DomainName' => domain_name,
-          'ItemName'   => item_name
-        ).merge(params)
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def batch_put_attributes(domain_name, items={}, replaces={})
-      params = {}
+      params = {
+        'Action'     => 'BatchPutAttributes',
+        'DomainName' => domain_name
+      }
       
       i = 0
       items.each do |key, attrs|
         params["Item.#{i}.ItemName"] = key
-        params.merge!(pack_attrs(attrs, replaces[key], "Item.#{i}."))
+        params.merge!(JAWS.pack_attrs(attrs, replaces[key], "Item.#{i}."))
         i += 1
       end
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge(
-          'Action'     => 'BatchPutAttributes',
-          'DomainName' => domain_name
-        ).merge(params)
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def delete_attributes(domain_name, item_name, attrs={})
-      params = pack_attrs(attrs)
+      params = {
+        'Action'     => 'DeleteAttributes',
+        'DomainName' => domain_name,
+        'ItemName'   => item_name
+      }
+      params.merge!(JAWS.pack_attrs(attrs))
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge(
-          'Action'     => 'DeleteAttributes',
-          'DomainName' => domain_name,
-          'ItemName'   => item_name
-        ).merge(params)
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params))
     end
 
     def quote(val)
@@ -174,19 +112,14 @@ class JAWS::SDB::Adapter
       end
     end
 
-    def select(expr, params=[], next_token=nil)
-      _params = {}
-      _params['NextToken'] = next_token if next_token
+    def select(expr, expr_params=[], next_token=nil)
+      params = {
+        'Action'           => 'Select',
+        'SelectExpression' => query_expr(expr, *expr_params)
+      }
+      params['NextToken'] = next_token if next_token
 
-      JAWS.fetch(
-        'GET',
-        URI,
-        PARAMS.merge(
-          'Action' => 'Select',
-          'SelectExpression' => query_expr(expr, *params)
-        ).merge(_params),
-        ['Item', 'Attribute']
-      )
+      JAWS.fetch('GET', URI, PARAMS.merge(params), 'Item', 'Attribute')
     end
   end
 

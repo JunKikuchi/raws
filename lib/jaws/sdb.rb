@@ -18,7 +18,10 @@ class JAWS::SDB
     end
 
     def list(next_token=nil, max_num=nil)
-      Adapter.list_domains(next_token, max_num)
+      Adapter.list_domains(
+        next_token,
+        max_num
+      )['ListDomainsResponse']['ListDomainsResult']
     end
 
     def select(expr, params=[], next_token=nil, &block)
@@ -30,22 +33,23 @@ class JAWS::SDB
         )['SelectResponse']['SelectResult']
 
         data['Item'].each do |val|
-          block.call([val['Name'], Adapter.unpack_attrs(val['Attribute'])])
+          block.call([val['Name'], JAWS.unpack_attrs(val['Attribute'])])
         end if data.key? 'Item'
       end while next_token = data['NextToken']
     end
 
-    def get(domain_name, item_name, attrs=[])
-      data = Adapter.get_attributes(
-        domain_name,
-        item_name,
-        attrs
-      )['GetAttributesResponse']['GetAttributesResult']
-      Adapter.unpack_attrs(data['Attribute'])
+    def get(domain_name, item_name, *attrs)
+      JAWS.unpack_attrs(
+        Adapter.get_attributes(
+          domain_name,
+          item_name,
+          *attrs
+        )['GetAttributesResponse']['GetAttributesResult']['Attribute']
+      )
     end
 
-    def put(domain_name, item_name, attrs={}, replaces=[])
-      Adapter.put_attributes(domain_name, item_name, attrs, replaces)
+    def put(domain_name, item_name, attrs={}, *replaces)
+      Adapter.put_attributes(domain_name, item_name, attrs, *replaces)
     end
 
     def batch_put(domain_name, items={}, replaces={})
@@ -59,7 +63,7 @@ class JAWS::SDB
     def each(&block)
       next_token = nil
       begin
-        data = list(next_token)['ListDomainsResponse']['ListDomainsResult']
+        data = list(next_token)
 
         data['DomainName'].each do |val|
           block.call(self.new(val))
@@ -95,12 +99,12 @@ class JAWS::SDB
     Select.new.columns(output_list).from(domain_name)
   end
 
-  def get(item_name, attrs=[])
-    self.class.get(domain_name, item_name, attrs)
+  def get(item_name, *attrs)
+    self.class.get(domain_name, item_name, *attrs)
   end
 
-  def put(item_name, attrs={}, replaces=[])
-    self.class.put(domain_name, item_name, attrs, replaces)
+  def put(item_name, attrs={}, *replaces)
+    self.class.put(domain_name, item_name, attrs, *replaces)
   end
 
   def batch_put(items={}, replaces={})
