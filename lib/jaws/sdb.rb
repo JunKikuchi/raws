@@ -3,16 +3,18 @@ class JAWS::SDB
   autoload :Select,  'jaws/sdb/select'
 
   class << self
-    def create(domain_name)
+    def create_domain(domain_name)
       Adapter.create_domain(domain_name)
     end
 
-    def delete(domain_name)
+    def delete_domain(domain_name)
       Adapter.delete_domain(domain_name)
     end
 
     def metadata(domain_name)
-      Adapter.domain_metadata(domain_name)
+      Adapter.domain_metadata(
+        domain_name
+      )['DomainMetadataResponse']['DomainMetadataResult']
     end
 
     def list(next_token=nil, max_num=nil)
@@ -73,16 +75,20 @@ class JAWS::SDB
     @domain_name = domain_name
   end
 
-  def create
-    self.class.create(domain_name)
+  def create_domain
+    self.class.create_domain(domain_name)
   end
 
-  def delete
-    self.class.delete(domain_name)
+  def delete_domain
+    self.class.delete_domain(domain_name)
   end
 
   def metadata
     self.class.metadata(domain_name)
+  end
+
+  def select(output_list='*')
+    Select.new.columns(output_list).from(domain_name)
   end
 
   def get(item_name, attrs=[])
@@ -95,9 +101,5 @@ class JAWS::SDB
 
   def batch_puth(items={}, replaces={})
     self.class.batch_put(domain_name, items, replaces)
-  end
-
-  def select(output_list='*')
-    Select.new.columns(output_list).from(domain_name)
   end
 end
