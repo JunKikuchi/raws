@@ -2,6 +2,19 @@ class RAWS::SQS
   autoload :Adapter, 'raws/sqs/adapter'
 
   class << self
+    def queue_url(queue_name)
+      data = Adapter.list_queues(
+        queue_name
+      )['ListQueuesResponse']['ListQueuesResult']
+
+      data['QueueUrl'].each do |url|
+        _queue_name = URI.parse(url).path.split('/').last
+        if _queue_name == queue_name
+          return url
+        end
+      end unless data.empty?
+    end
+
     def create_queue(queue_name, timeout=nil)
       self.new(
         Adapter.create_queue(
@@ -28,10 +41,8 @@ class RAWS::SQS
     end
 
     def [](queue_name)
-      list(queue_name).each do |queue|
-        if queue.queue_name == queue_name
-          return queue
-        end
+      if url = queue_url(queue_name)
+        self.new(queue_url(queue_name))
       end
     end
 
@@ -50,25 +61,34 @@ class RAWS::SQS
       Adapter.send_message(queue_url, msg)
     end
 
-    def receive(queue_url, num_msgs, timeout, *attrs)
+    def receive(queue_url, num_msgs=nil, timeout=nil, *attrs)
       Adapter.receive_message(
         queue_url,
         num_msgs,
         timeout,
         *attrs
-      )['ReceiveMessageResponse']['ReceiveMessageResult']['Message']
+      )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
+    end
+
+    def delete(queue_url, handle)
+      Adapter.delete_message(queue_url, handle)
     end
   end
 
   class Message
+    attr_reader :queue
     attr_reader :data
 
-    def initialize(data)
-      @data = data
+    def initialize(queue, data)
+      @queue, @data = queue, data
     end
 
     def body
       data['Body']
+    end
+
+    def delete
+      queue.delete data['ReceiptHandle']
     end
   end
 
@@ -97,8 +117,12 @@ class RAWS::SQS
   end
 
   def receive(num_msgs=nil, timeout=nil, *attrs)
-    self.class.receive(queue_url, num_msgs, timeout, *attrs).map do |msg|
-      Message.new(msg)
+    self.class.receive(queue_url, num_msgs, timeout, *attrs).map do |val|
+      Message.new(self, val)
     end
+  end
+
+  def delete(handle)
+    self.class.delete(queue_url, handle)
   end
 end

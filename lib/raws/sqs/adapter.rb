@@ -54,7 +54,8 @@ class RAWS::SQS::Adapter
         'GET',
         queue_url,
         PARAMS.merge(params),
-        'Attribute'
+        :multiple => %w'Attribute',
+        :unpack   => %w'Attribute'
       )
     end
 
@@ -80,7 +81,22 @@ class RAWS::SQS::Adapter
       params['VisibilityTimeout']   = timeout  if timeout
       params.merge!(pack_attrs(attrs))
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params), 'Message', 'Attribute')
+      RAWS.fetch(
+        'GET',
+        queue_url,
+        PARAMS.merge(params),
+        :multiple => %w'Message Attribute',
+        :unpack   => %w'Attribute'
+      )
+    end
+
+    def delete_message(queue_url, receipt_handle)
+      params = {
+        'Action'        => 'DeleteMessage',
+        'ReceiptHandle' => receipt_handle
+      }
+
+      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
   end
 
