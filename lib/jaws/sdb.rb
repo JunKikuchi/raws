@@ -19,10 +19,11 @@ class JAWS::SDB
       Adapter.list_domains(next_token, max_num)
     end
 
-    def select(expr, next_token=nil, &block)
+    def select(expr, params=[], next_token=nil, &block)
       begin
         data = Adapter.select(
           expr,
+          params,
           next_token
         )['SelectResponse']['SelectResult']
 

@@ -2,6 +2,8 @@ class JAWS::SDB::Adapter
   module Adapter20090415
     URI = 'https://sdb.amazonaws.com/'
     PARAMS = {'Version' => '2009-04-15'}
+    KEYWORDS = %w'or and not from where select like null is order by asc desc in between intersection limit every'
+    REXP_NAME = /^[a-zA-Z_$]/
 
     def create_domain(domain_name)
       JAWS.fetch(
@@ -150,7 +152,25 @@ class JAWS::SDB::Adapter
       )
     end
 
-    def select(exp, next_token=nil)
+    def quote(val)
+      if !REXP_NAME.match(val) || KEYWORDS.include?(val)
+        "'#{val}'"
+      else
+        val
+      end
+    end
+
+    def query_expr(expr, params)
+      expr.gsub(/(\\)?(\?)/) do
+        if $1
+          "?"
+        else
+          "'#{params.shift.gsub(/(['])/, '\1\1')}'"
+        end
+      end
+    end
+
+    def select(expr, params=[], next_token=nil)
       params = {}
       params['NextToken'] = next_token if next_token
 
@@ -159,7 +179,7 @@ class JAWS::SDB::Adapter
         URI,
         PARAMS.merge(
           'Action' => 'Select',
-          'SelectExpression' => exp
+          'SelectExpression' => query_expr(expr, params)
         ).merge(params),
         ['Item', 'Attribute']
       )
