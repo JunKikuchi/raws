@@ -150,4 +150,5 @@ module RAWS
 
   autoload :SDB, 'raws/sdb'
   autoload :SQS, 'raws/sqs'
+  autoload :S3,  'raws/s3'
 end
