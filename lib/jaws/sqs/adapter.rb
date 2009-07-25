@@ -23,10 +23,10 @@ class JAWS::SQS::Adapter
       params = {'Action' => 'ListQueues'}
       params['QueueNamePrefix'] = prefix if prefix
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      JAWS.fetch('GET', URI, PARAMS.merge(params), 'QueueUrl')
     end
 
-    def pack_attrs(*attrs)
+    def pack_attrs(attrs)
       params = {}
 
       if(attrs.size == 1)
@@ -45,21 +45,42 @@ class JAWS::SQS::Adapter
     def get_queue_attributes(queue_url, *attrs)
       params = {'Action' => 'GetQueueAttributes'}
       if attrs.empty?
-        params.merge!(pack_attrs('All'))
+        params.merge!(pack_attrs(['All']))
       else
-        params.merge!(pack_attrs(*attrs))
+        params.merge!(pack_attrs(attrs))
       end
 
-      JAWS.fetch('GET', queue_url, PARAMS.merge(params), 'Attribute')
+      JAWS.fetch(
+        'GET',
+        queue_url,
+        PARAMS.merge(params),
+        'Attribute'
+      )
     end
 
     def set_queue_attributes(queue_url, attrs={})
       params = {'Action' => 'SetQueueAttributes'}
       params.merge!(JAWS.pack_attrs(attrs))
 
-      p params
+      JAWS.fetch('GET', queue_url, PARAMS.merge(params))
+    end
+
+    def send_message(queue_url, msg)
+      params = {
+        'Action'      => 'SendMessage',
+        'MessageBody' => msg
+      }
 
       JAWS.fetch('GET', queue_url, PARAMS.merge(params))
+    end
+
+    def receive_message(queue_url, num_msgs=nil, timeout=nil, *attrs)
+      params = {'Action' => 'ReceiveMessage'}
+      params['MaxNumberOfMessages'] = num_msgs if num_msgs
+      params['VisibilityTimeout']   = timeout  if timeout
+      params.merge!(pack_attrs(attrs))
+
+      JAWS.fetch('GET', queue_url, PARAMS.merge(params), 'Message', 'Attribute')
     end
   end
 

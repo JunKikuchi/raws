@@ -27,6 +27,14 @@ class JAWS::SQS
       list.each(&block)
     end
 
+    def [](queue_name)
+      list(queue_name).each do |queue|
+        if queue.queue_name == queue_name
+          return queue
+        end
+      end
+    end
+
     def get_attrs(queue_url, *attrs)
       Adapter.get_queue_attributes(
         queue_url,
@@ -36,6 +44,31 @@ class JAWS::SQS
 
     def set_attrs(queue_url, attrs={})
       Adapter.set_queue_attributes(queue_url, attrs)
+    end
+
+    def send(queue_url, msg)
+      Adapter.send_message(queue_url, msg)
+    end
+
+    def receive(queue_url, num_msgs, timeout, *attrs)
+      Adapter.receive_message(
+        queue_url,
+        num_msgs,
+        timeout,
+        *attrs
+      )['ReceiveMessageResponse']['ReceiveMessageResult']['Message']
+    end
+  end
+
+  class Message
+    attr_reader :data
+
+    def initialize(data)
+      @data = data
+    end
+
+    def body
+      data['Body']
     end
   end
 
@@ -57,5 +90,15 @@ class JAWS::SQS
 
   def set_attrs(attrs={})
     self.class.set_attrs(queue_url, attrs)
+  end
+
+  def send(msg)
+    self.class.send(queue_url, msg)
+  end
+
+  def receive(num_msgs=nil, timeout=nil, *attrs)
+    self.class.receive(queue_url, num_msgs, timeout, *attrs).map do |msg|
+      Message.new(msg)
+    end
   end
 end

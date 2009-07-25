@@ -24,6 +24,21 @@ class JAWS::SDB
       )['ListDomainsResponse']['ListDomainsResult']
     end
 
+    def each(&block)
+      next_token = nil
+      begin
+        data = list(next_token)
+        data['DomainName'].each do |val|
+          block.call(self.new(val))
+        end
+      end while next_token = data['NextToken']
+    end
+
+    def [](domain_name)
+      @cache ||= {}
+      @cache[domain_name] ||= self.new(domain_name)
+    end
+
     def select(expr, params=[], next_token=nil, &block)
       begin
         data = Adapter.select(
@@ -33,19 +48,17 @@ class JAWS::SDB
         )['SelectResponse']['SelectResult']
 
         data['Item'].each do |val|
-          block.call([val['Name'], JAWS.unpack_attrs(val['Attribute'])])
+          block.call([val['Name'], val['Attribute']])
         end if data.key? 'Item'
       end while next_token = data['NextToken']
     end
 
     def get(domain_name, item_name, *attrs)
-      JAWS.unpack_attrs(
-        Adapter.get_attributes(
-          domain_name,
-          item_name,
-          *attrs
-        )['GetAttributesResponse']['GetAttributesResult']['Attribute']
-      )
+      Adapter.get_attributes(
+        domain_name,
+        item_name,
+        *attrs
+      )['GetAttributesResponse']['GetAttributesResult']['Attribute']
     end
 
     def put(domain_name, item_name, attrs={}, *replaces)
@@ -58,22 +71,6 @@ class JAWS::SDB
 
     def delete(domain_name, item_name, attrs={})
       Adapter.delete_attributes(domain_name, item_name, attrs)
-    end
-
-    def each(&block)
-      next_token = nil
-      begin
-        data = list(next_token)
-
-        data['DomainName'].each do |val|
-          block.call(self.new(val))
-        end
-      end while next_token = data['NextToken']
-    end
-
-    def [](domain_name)
-      @cache ||= {}
-      @cache[domain_name] ||= self.new(domain_name)
     end
   end
 

@@ -37,7 +37,7 @@ class JAWS::SDB::Adapter
       params['NextToken']          = next_token if next_token
       params['MaxNumberOfDomains'] = max_num    if max_num
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params), 'DomainName')
+      JAWS.fetch('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
     end
 
     def get_attributes(domain_name, item_name, *attrs)
@@ -53,7 +53,13 @@ class JAWS::SDB::Adapter
         i += 1
       end
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params))
+      JAWS.fetch(
+        'GET',
+        URI,
+        PARAMS.merge(params),
+        :multiple => %w'Attribute',
+        :unpack   => %w'Attribute'
+      )
     end
 
     def put_attributes(domain_name, item_name, attrs={}, *replaces)
@@ -119,7 +125,13 @@ class JAWS::SDB::Adapter
       }
       params['NextToken'] = next_token if next_token
 
-      JAWS.fetch('GET', URI, PARAMS.merge(params), 'Item', 'Attribute')
+      JAWS.fetch(
+        'GET',
+        URI,
+        PARAMS.merge(params),
+        :multiple => %w'Item Attribute',
+        :unpack   => %w'Attribute'
+      )
     end
   end
 

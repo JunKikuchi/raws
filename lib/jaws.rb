@@ -52,50 +52,6 @@ module JAWS
       )
     end
 
-    def parse(doc, multi=[], ret={})
-      doc.children.each do |tag|
-        name = tag.name #.gsub(/([A-Z])/, '_\1').gsub(/^_/, '').downcase.to_sym
-
-        unless ret[name].is_a? Array
-          if ret.key?(name)
-            ret[name] = [ret[name]]
-          elsif multi.include? name
-            ret[name] = []
-          end
-        end
-
-        if tag.child.is_a? Nokogiri::XML::Text
-          if ret.key? name
-            ret[name] << tag.content
-          else
-            ret[name] = tag.content
-          end
-        else
-          if ret.key? name
-            ret[name] << {}
-            parse(tag, multi, ret[name].last)
-          else
-            ret[name] = {}
-            parse(tag, multi, ret[name])
-          end
-        end
-      end
-
-      ret
-    end
-
-    def fetch(http_verb, base_uri, params, *multi)
-      get(
-        "#{base_uri}?#{sign(http_verb, base_uri, params)}",
-        :on_success => lambda { |r|
-          parse(Nokogiri::XML.parse(r.body), multi)
-        },
-        :on_failure => lambda { |r|
-          raise Error.new(r, parse(Nokogiri::XML.parse(r.body)))
-        }
-      )
-    end
-
     def pack_attrs(attrs, replaces=nil, prefix=nil)
       params = {}
 
@@ -140,6 +96,55 @@ module JAWS
       end if attrs
 
       ret
+    end
+
+    def parse(doc, params={}, ret={})
+      multiple = params[:multiple] || []
+      unpack   = params[:unpack]   || []
+
+      name = nil
+      doc.children.each do |tag|
+        name = tag.name #.gsub(/([A-Z])/, '_\1').gsub(/^_/, '').downcase.to_sym
+
+        unless ret[name].is_a? Array
+          if ret.key?(name)
+            ret[name] = [ret[name]]
+          elsif multiple.include? name
+            ret[name] = []
+          end
+        end
+
+        if tag.child.is_a? Nokogiri::XML::Text
+          if ret.key? name
+            ret[name] << tag.content
+          else
+            ret[name] = tag.content
+          end
+        else
+          if ret.key? name
+            ret[name] << {}
+            parse(tag, params, ret[name].last)
+          else
+            ret[name] = {}
+            parse(tag, params, ret[name])
+          end
+        end
+      end
+      ret[name] = unpack_attrs(ret[name]) if unpack.include?(name)
+
+      ret
+    end
+
+    def fetch(http_verb, base_uri, params, options={})
+      get(
+        "#{base_uri}?#{sign(http_verb, base_uri, params)}",
+        :on_success => lambda { |r|
+          parse(Nokogiri::XML.parse(r.body), options)
+        },
+        :on_failure => lambda { |r|
+          raise Error.new(r, parse(Nokogiri::XML.parse(r.body)))
+        }
+      )
     end
   end
 
