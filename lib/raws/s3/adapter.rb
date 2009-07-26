@@ -8,7 +8,7 @@ class RAWS::S3::Adapter
       "AWS #{RAWS.aws_access_key_id}:#{
         [
           ::OpenSSL::HMAC.digest(
-            ::OpenSSL::Digest::Digest.new("sha1"),
+            ::OpenSSL::Digest::SHA1.new,
             RAWS.aws_secret_access_key,
             [
               http_verb,

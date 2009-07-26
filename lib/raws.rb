@@ -44,7 +44,7 @@ module RAWS
       "#{path}&Signature=" + escape(
         [
           ::OpenSSL::HMAC.digest(
-            ::OpenSSL::Digest::Digest.new("sha256"),
+            ::OpenSSL::Digest::SHA256.new,
             aws_secret_access_key,
             "#{http_verb.upcase}\n#{uri.host.downcase}\n#{uri.path}\n#{path}"
           )
