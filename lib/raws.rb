@@ -10,15 +10,15 @@ path = File.expand_path(File.dirname(__FILE__))
 $:.unshift(path) unless $:.include?(path)
 
 module RAWS
-  include Typhoeus
-
   class Error < StandardError
-    attr_reader :response
+    attr_reader :code
+    attr_reader :header
+    attr_reader :body
     attr_reader :data
 
-    def initialize(response, data)
+    def initialize(code, header, body, data)
       super()
-      @response, @data = response, data
+      @code, @header, @body, @data = code, header, body, data
     end
   end
 
@@ -136,15 +136,20 @@ module RAWS
     end
 
     def fetch(http_verb, base_uri, params, options={})
-      get(
-        "#{base_uri}?#{sign(http_verb, base_uri, params)}",
-        :on_success => lambda { |r|
-          parse(Nokogiri::XML.parse(r.body), options)
-        },
-        :on_failure => lambda { |r|
-          raise Error.new(r, parse(Nokogiri::XML.parse(r.body)))
-        }
-      )
+      http = Typhoeus::Easy.new
+      http.method = http_verb.downcase.to_sym
+      http.url    = "#{base_uri}?#{sign(http_verb, base_uri, params)}"
+      http.perform
+      if 200 <= http.response_code && http.response_code <= 299
+        parse(Nokogiri::XML.parse(http.response_body), options)
+      else
+        raise Error.new(
+          http.response_code,
+          http.response_header,
+          http.response_body,
+          parse(Nokogiri::XML.parse(http.response_body))
+        )
+      end
     end
   end
 
