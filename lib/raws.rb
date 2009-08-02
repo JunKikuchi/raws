@@ -137,7 +137,7 @@ module RAWS
 
     def fetch(http_verb, base_uri, params, options={})
       r = get("#{base_uri}?#{sign(http_verb, base_uri, params)}")
-      if 200 <= r.code && r.code <= 300
+      if 200 <= r.code && r.code <= 299
         parse(Nokogiri::XML.parse(r.body), options)
       else
         raise Error.new(r, parse(Nokogiri::XML.parse(r.body)))

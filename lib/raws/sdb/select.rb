@@ -41,7 +41,6 @@ class RAWS::SDB::Select
   end
 
   def to_sql
-
     s = [
       'select',
       @output_list,
