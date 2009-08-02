@@ -1,6 +1,7 @@
 class RAWS::SDB
   autoload :Adapter, 'raws/sdb/adapter'
   autoload :Select,  'raws/sdb/select'
+  autoload :Model,   'raws/sdb/model'
 
   class << self
     def create_domain(domain_name)
@@ -28,8 +29,10 @@ class RAWS::SDB
       next_token = nil
       begin
         data = list(next_token)
-        data['DomainName'].each do |val|
-          block.call(self.new(val))
+        if domain = data['DomainName']
+          domain.each do |val|
+            block.call(self.new(val))
+          end
         end
       end while next_token = data['NextToken']
     end

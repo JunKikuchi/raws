@@ -10,8 +10,8 @@ class RAWS::SDB::Select
     @limit       = nil
   end
 
-  def attr_filter(key, val)
-    [key, val]
+  def attr_filter(val)
+    val
   end
 
   def columns(*val)
@@ -56,9 +56,8 @@ class RAWS::SDB::Select
   end
 
   def each(&block)
-    RAWS::SDB.select(*to_sql, &block)
-    #do |key, val|
-    #  block.call(*attr_filter(key, val))
-    #end
+    RAWS::SDB.select(*to_sql) do |val|
+      block.call(attr_filter(val))
+    end
   end
 end
