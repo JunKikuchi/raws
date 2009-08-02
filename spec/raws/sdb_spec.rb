@@ -115,7 +115,7 @@ describe RAWS::SDB do
     end
 
     it 'batch_put & delete' do
-      RAWS::SDB.batch_put(
+      RAWS::SDB[RAWS_SDB_DOMAIN].batch_put(
         "1" => {"a"=>["10"]},
         "2" => {"a"=>["20"]},
         "3" => {"a"=>["30"]}
