@@ -25,7 +25,6 @@ module RAWS
   class << self
     attr_accessor :aws_access_key_id
     attr_accessor :aws_secret_access_key
-    attr_accessor :response_metadata
 
     def escape(val)
       URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
@@ -139,7 +138,6 @@ module RAWS
     def fetch(http_verb, base_uri, params, options={})
       r = get("#{base_uri}?#{sign(http_verb, base_uri, params)}")
       data = parse(Nokogiri::XML.parse(r.body), options)
-      self.response_metadata = data.values.first['ResponseMetadata']
       if 200 <= r.code && r.code <= 299
         data
       else
