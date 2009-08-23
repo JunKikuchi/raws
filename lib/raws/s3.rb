@@ -3,7 +3,7 @@ class RAWS::S3
 
   class << self
     def list
-      Adapter.list_backets
+      Adapter.get_service
     end
   end
 end

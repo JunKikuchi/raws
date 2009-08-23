@@ -13,12 +13,12 @@ module RAWS
   include Typhoeus
 
   class Error < StandardError
-    attr_reader :request
+    attr_reader :response
     attr_reader :data
 
-    def initialize(request, data)
+    def initialize(response, data)
       super()
-      @request, @data = request, data
+      @response, @data = response, data
     end
   end
 

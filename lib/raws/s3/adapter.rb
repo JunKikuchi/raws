@@ -2,10 +2,33 @@ require 'digest/md5'
 
 class RAWS::S3::Adapter
   module Adapter20060301
-    URI = 'https://s3.amazonaws.com/'
+    URI_PARAMS = {
+      :scheme => 'https',
+      :host   => 's3.amazonaws.com',
+      :path   => '/',
+      :query  => {}
+    }
+
+    def build_uri(params={})
+      "#{params[:scheme]}://#{
+        if params[:bucket]
+          "#{params[:bucket]}.#{params[:host]}"
+        else
+          params[:host]
+        end
+      }#{params[:path]}#{
+        if params[:query].empty?
+          ''
+        else
+          '?' << a[:query].map do |key, val|
+            val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
+          end.sort.join(';')
+        end
+      }"
+    end
 
     def sign(http_verb, content, type, date, path)
-      "AWS #{RAWS.aws_access_key_id}:#{
+      "#{RAWS.aws_access_key_id}:#{
         [
           ::OpenSSL::HMAC.digest(
             ::OpenSSL::Digest::SHA1.new,
@@ -15,32 +38,84 @@ class RAWS::S3::Adapter
               content ? Digest::MD5.hexdigest(content) : '',
               type,
               date,
-              "/#{path}"
+              path
             ].join("\n")
           )
         ].pack('m').strip
       }"
     end
 
-    def fetch(http_verb, base_uri, path, content, type, options={})
+    def fetch(http_verb, _uri={}, options={}, content=nil, type='')
       date = Time.now.httpdate
-      RAWS.get(
-        base_uri + path,
+      uri = URI_PARAMS.merge(_uri)
+      r = RAWS.__send__(
+        http_verb.downcase.to_sym,
+        build_uri(uri),
         :headers => {
-          'Date'          => date,
-          'Authorization' => sign(http_verb, content, type, date, path)
-        },
-        :on_success => lambda { |r|
-          RAWS.parse(Nokogiri::XML.parse(r.body), options)
-        },
-        :on_failure => lambda { |r|
-          raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
+          'Date' => date,
+          'Authorization' => "AWS #{
+            sign(http_verb, content, type, date, uri[:path])
+          }"
+        }
+      )
+      data = RAWS.parse(Nokogiri::XML.parse(r.body), options)
+      if 200 <= r.code && r.code <= 299
+        data
+      else
+        raise RAWS::Error.new(r, data)
+      end
+    end
+
+    def get_service
+      fetch('GET', {}, :multiple => 'Bucket')
+    end
+
+    def put_bucket(bucket_name)
+      fetch('PUT', :path => "/#{bucket_name}")
+    end
+
+    def put_request_payment(bucket_name)
+      fetch(
+        'PUT',
+        {
+          :bucket => bucket_name,
+          :query  => {'requestPayment' => nil}
         }
       )
     end
 
-    def list_backets
-      fetch('GET', URI, '', nil, '', :multiple => 'Bucket')
+    def get_bucket(bucket_name, params={})
+      fetch(
+        'GET',
+        {
+          :bucket => bucket_name,
+          :query  => params
+        }
+      )
+    end
+
+    def get_request_payment(bucket_name)
+      fetch(
+        'GET',
+        {
+          :bucket => bucket_name,
+          :query  => {'requestPayment' => nil}
+        }
+      )
+    end
+
+    def get_bucket_location(bucket_name)
+      fetch(
+        'GET',
+        {
+          :bucket => bucket_name,
+          :query  => {'location' => nil}
+        }
+      )
+    end
+
+    def delete_bucket(bucket_name)
+      fetch('DELETE', :path => "/#{bucket_name}")
     end
   end
 
