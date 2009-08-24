@@ -15,8 +15,8 @@ describe RAWS::S3::Adapter do
 
     it 'put_bucket' do
       begin
-        #p RAWS::S3::Adapter.delete_bucket('kikuchitestbucket')
-        #p RAWS::S3::Adapter.put_bucket('kikuchitestbucket')
+#        p RAWS::S3::Adapter.delete_bucket('kikuchitestbucket')
+#p RAWS::S3::Adapter.put_bucket('kikuchitestbucket')
       rescue RAWS::Error => e
         p e.response.code
         p e.data
