@@ -1,4 +1,5 @@
 .DS_Store
+*.gem
 /spec/spec_config.rb
 /rdoc
 /pkg
