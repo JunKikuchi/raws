@@ -1,3 +1,54 @@
 = RAWS
 
 RAWS is a Ruby library for Amazon Web Service (AWS).
+
+== SQS (Amazon Simple Queue Service)
+
+  require 'rubygems'
+  require 'raws'
+  
+  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
+  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  
+  RAWS::SQS.create_queue('test_queue')
+  
+  sleep 60
+  
+  RAWS::SQS['test_queue'].send('hello1')
+  RAWS::SQS['test_queue'].send('hello2')
+  RAWS::SQS['test_queue'].send('hello3')
+  
+  RAWS::SQS['test_queue'].receive(10).each do |msg|
+    p msg.body
+    msg.delete
+  end
+  
+  RAWS::SQS['test_queue'].delete_queue
+
+== SDB (Amazon SimpleDB)
+
+  require 'rubygems'
+  require 'raws'
+  
+  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
+  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  
+  RAWS::SDB.create_domain('test_domain')
+  
+  sleep 60
+  
+  RAWS::SDB['test_domain'].put('1', 'a' => '10')
+  RAWS::SDB['test_domain'].put('2', 'b' => '10')
+  RAWS::SDB['test_domain'].put('3', 'c' => '10')
+  
+  p RAWS::SDB['test_domain'].get('1')
+  p RAWS::SDB['test_domain'].get('2')
+  p RAWS::SDB['test_domain'].get('3')
+  
+  RAWS::SDB['test_domain'].delete('1')
+  RAWS::SDB['test_domain'].delete('2')
+  RAWS::SDB['test_domain'].delete('3')
+  
+  RAWS::SDB['test_domain'].delete_domain
+
+== S3 (Amazon Simple Storage Service)

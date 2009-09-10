@@ -1,14 +1,14 @@
 require 'rubygems'
 require 'lib/raws'
 
+require 'yaml'
+def d(val)
+  puts val.to_yaml
+end
+
 RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
 RAWS.aws_secret_access_key = AWS_SECRET_ACCESS_KEY
 
 RAWS_SDB_DOMAIN = AWS_SDB_DOMAIN
 RAWS_SQS_QUEUE  = AWS_SQS_QUEUE
 
-
-require 'yaml'
-def d(val)
-  puts val.to_yaml
-end
