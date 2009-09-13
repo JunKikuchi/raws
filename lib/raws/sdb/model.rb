@@ -30,6 +30,31 @@ module RAWS::SDB::Model
     def generate_id
       UUIDTools::UUID.random_create
     end
+
+    def sdb_reader(*names)
+      names.each do |name|
+        module_eval %Q{
+          def #{name}
+            self['#{name}']
+          end
+        }
+      end
+    end
+
+    def sdb_writer(*names)
+      names.each do |name|
+        module_eval %Q{
+          def #{name}=(val)
+            self['#{name}'] = val
+          end
+        }
+      end
+    end
+
+    def sdb_accessor(*names)
+      sdb_reader(*names)
+      sdb_writer(*names)
+    end
   end
   
   module InstanceMethods
