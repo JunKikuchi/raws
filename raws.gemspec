@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jun Kikuchi"]
-  s.date = %q{2009-08-25}
+  s.date = %q{2009-09-13}
   s.description = %q{raws}
   s.email = %q{kikuchi@bonnou.com}
   s.extra_rdoc_files = [
@@ -38,6 +38,7 @@ Gem::Specification.new do |s|
   s.summary = %q{raws}
   s.test_files = [
     "spec/raws/s3_spec.rb",
+     "spec/raws/sdb/model_spec.rb",
      "spec/raws/sdb_spec.rb",
      "spec/raws/sqs_spec.rb",
      "spec/raws_spec.rb"

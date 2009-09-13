@@ -62,6 +62,7 @@ module RAWS::SDB::Model
 
     def initialize(values={}, id=nil)
       @id, @values = id, values
+      after_initialize
     end
 
     def [](key)
@@ -73,15 +74,25 @@ module RAWS::SDB::Model
     end
 
     def delete
+      before_delete
       RAWS::SDB[self.class.domain_name].delete(id) if id
+      after_delete
     end
 
     def save
+      before_save
       RAWS::SDB[self.class.domain_name].put(
         id || self.class.generate_id,
         values
       )
+      after_save
     end
+
+    def after_initialize; end
+    def before_delete; end
+    def after_delete; end
+    def before_save; end
+    def after_save; end
   end
 
   def self.included(mod)
