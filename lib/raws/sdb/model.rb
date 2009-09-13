@@ -81,10 +81,15 @@ module RAWS::SDB::Model
 
     def save
       before_save
-      RAWS::SDB[self.class.domain_name].put(
-        id || self.class.generate_id,
-        values
-      )
+      if id
+        before_update
+        RAWS::SDB[self.class.domain_name].put(id, values)
+        after_update
+      else
+        before_insert
+        RAWS::SDB[self.class.domain_name].put(self.class.generate_id, values)
+        after_insert
+      end
       after_save
     end
 
@@ -93,6 +98,10 @@ module RAWS::SDB::Model
     def after_delete; end
     def before_save; end
     def after_save; end
+    def before_update; end
+    def after_update; end
+    def before_insert; end
+    def after_insert; end
   end
 
   def self.included(mod)
