@@ -87,7 +87,8 @@ module RAWS::SDB::Model
         after_update
       else
         before_insert
-        RAWS::SDB[self.class.domain_name].put(self.class.generate_id, values)
+        @id = self.class.generate_id
+        RAWS::SDB[self.class.domain_name].put(id, values)
         after_insert
       end
       after_save
