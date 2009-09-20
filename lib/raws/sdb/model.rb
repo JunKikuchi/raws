@@ -27,6 +27,12 @@ module RAWS::SDB::Model
       Select.new(self).from(domain_name)
     end
 
+    def find(id)
+      if attrs = RAWS::SDB[domain_name].get(id)
+        self.new(id, attrs)
+      end
+    end
+
     def generate_id
       UUIDTools::UUID.random_create
     end
