@@ -29,7 +29,7 @@ module RAWS::SDB::Model
 
     def find(id)
       if attrs = RAWS::SDB[domain_name].get(id)
-        self.new(id, attrs)
+        self.new(attrs, id)
       end
     end
 
