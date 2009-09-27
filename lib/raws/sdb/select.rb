@@ -10,33 +10,44 @@ class RAWS::SDB::Select
     @limit       = nil
   end
 
+  def fetch(&block)
+    RAWS::SDB.select(*to_sql) do |val|
+      block.call(attr_filter(val))
+    end
+  end
+
   def attr_filter(val)
     val
   end
 
-  def columns(*val)
+  def columns(*val, &block)
     @output_list = val.join(',')
+    fetch(&block) if block_given?
     self
   end
 
-  def from(val)
+  def from(val, &block)
     @domain = val
+    fetch(&block) if block_given?
     self
   end
 
-  def where(condition, *values)
+  def where(condition, *values, &block)
     @condition = condition
     @values    = values
+    fetch(&block) if block_given?
     self
   end
 
-  def order(val)
+  def order(val, &block)
     @sort = val
+    fetch(&block) if block_given?
     self
   end
 
-  def limit(val)
+  def limit(val, &block)
     @limit = val
+    fetch(&block) if block_given?
     self
   end
 
@@ -53,11 +64,5 @@ class RAWS::SDB::Select
     s.push('limit',    @limit    ) if @limit
 
     [s.join(' '), @values]
-  end
-
-  def each(&block)
-    RAWS::SDB.select(*to_sql) do |val|
-      block.call(attr_filter(val))
-    end
   end
 end

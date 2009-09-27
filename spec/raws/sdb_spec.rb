@@ -74,12 +74,12 @@ describe RAWS::SDB do
     end
 
     it 'select' do
-      RAWS::SDB[RAWS_SDB_DOMAIN].select.each do |val|
+      RAWS::SDB[RAWS_SDB_DOMAIN].select do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
 
-      RAWS::SDB[RAWS_SDB_DOMAIN].select.where('b = ?', 20).each do |val|
+      RAWS::SDB[RAWS_SDB_DOMAIN].select.where('b = ?', 20) do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
@@ -220,12 +220,12 @@ describe RAWS::SDB do
     end
 
     it 'select' do
-      @sdb.select.each do |val|
+      @sdb.select do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
 
-      @sdb.select.where('b = ?', 20).each do |val|
+      @sdb.select.where('b = ?', 20) do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end

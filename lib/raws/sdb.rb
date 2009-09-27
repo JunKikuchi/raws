@@ -95,8 +95,8 @@ class RAWS::SDB
     self.class.metadata(domain_name)
   end
 
-  def select(output_list='*')
-    Select.new.columns(output_list).from(domain_name)
+  def select(output_list='*', &block)
+    Select.new.columns(output_list).from(domain_name, &block)
   end
 
   def get(item_name, *attrs)
