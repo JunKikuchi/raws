@@ -3,13 +3,13 @@ require 'spec/spec_config'
 describe RAWS::SQS do
   before :all do
     RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
-    puts 'waiting 60 sec...'
+    puts '[waiting 60 secs]'
     sleep 60
   end
 
   after :all do
     RAWS::SQS[RAWS_SQS_QUEUE].delete_queue
-    puts 'waiting 60 sec...'
+    puts '[waiting 60 secs]'
     sleep 60
   end
 

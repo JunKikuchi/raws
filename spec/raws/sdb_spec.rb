@@ -1,6 +1,32 @@
 require 'spec/spec_config'
 
 describe RAWS::SDB do
+  before :all do
+    RAWS::SDB.create_domain(RAWS_SDB_DOMAIN)
+    puts '[sleep 60 secs]'
+    sleep 60
+    RAWS::SDB[RAWS_SDB_DOMAIN].put(
+      '100', 'a' => 10
+    )
+    RAWS::SDB[RAWS_SDB_DOMAIN].put(
+      '200', 'a' => [10, 20],     'b' => 20
+    )
+    RAWS::SDB[RAWS_SDB_DOMAIN].put(
+      '300', 'a' => [10, 20, 30], 'b' => 20, 'c' => 30
+    )
+    RAWS::SDB[RAWS_SDB_DOMAIN].batch_put(
+      "400" => {"a"=>["10", "20", "30", "40"]},
+      "500" => {"a"=>["10", "20", "30", "40", "50"]},
+      "600" => {"a"=>["10", "20", "30", "40", "50", "60"]}
+    )
+  end
+
+  after :all do
+    RAWS::SDB.delete_domain(RAWS_SDB_DOMAIN)
+    puts '[sleep 60 secs]'
+    sleep 60
+  end
+
   describe 'class' do
     it 'methods' do
       %w'
@@ -21,25 +47,9 @@ describe RAWS::SDB do
     end
 
     it 'create_domain' do
-      RAWS::SDB.create_domain(RAWS_SDB_DOMAIN)
-      RAWS::SDB[RAWS_SDB_DOMAIN].put(
-        '100', 'a' => 10
-      )
-      RAWS::SDB[RAWS_SDB_DOMAIN].put(
-        '200', 'a' => [10, 20],     'b' => 20
-      )
-      RAWS::SDB[RAWS_SDB_DOMAIN].put(
-        '300', 'a' => [10, 20, 30], 'b' => 20, 'c' => 30
-      )
-      RAWS::SDB[RAWS_SDB_DOMAIN].batch_put(
-        "400" => {"a"=>["10", "20", "30", "40"]},
-        "500" => {"a"=>["10", "20", "30", "40", "50"]},
-        "600" => {"a"=>["10", "20", "30", "40", "50", "60"]}
-      )
     end
 
     it 'delete_domain' do
-      #RAWS::SDB.delete_domain(RAWS_SDB_DOMAIN)
     end
 
     it 'metadata' do
