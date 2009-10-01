@@ -11,7 +11,6 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SQS.create_queue('test_queue')
-  
   sleep 60
   
   RAWS::SQS['test_queue'].send('hello1')
@@ -36,7 +35,6 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SDB.create_domain('test_domain')
-  
   sleep 60
   
   RAWS::SDB['test_domain'].put('1', 'a' => '10')
