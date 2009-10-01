@@ -27,6 +27,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
 
 == SDB (Amazon SimpleDB)
 
+プリミティブな使い方
+
   require 'rubygems'
   require 'raws'
   
@@ -60,6 +62,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   RAWS::SDB['test_domain'].delete('3')
   
   RAWS::SDB['test_domain'].delete_domain
+
+クラスとして使う場合
 
   require 'rubygems'
   require 'raws'
