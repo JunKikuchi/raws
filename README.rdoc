@@ -97,12 +97,12 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   foo3.save
   
   Foo.select do |a|
-    p [a['a'], a['b'], a['c']]
+    p [a.a, a['b'], a['c']]
     a.delete
   end
   
   Foo.select.where('a = ?', '10') do |a|
-    p [a['a'], a['b'], a['c']]
+    p [a.a, a.b, a['c']]
     a.delete
   end
   
