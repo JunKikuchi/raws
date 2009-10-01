@@ -45,10 +45,63 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   p RAWS::SDB['test_domain'].get('2')
   p RAWS::SDB['test_domain'].get('3')
   
+  RAWS::SDB['test_domain'].select do |a|
+    key, data = a
+    p [key, data]
+  end
+
+  RAWS::SDB['test_domain'].select.where('a = ?', 10) do |a|
+    key, data = a
+    p [key, data]
+  end
+  
   RAWS::SDB['test_domain'].delete('1')
   RAWS::SDB['test_domain'].delete('2')
   RAWS::SDB['test_domain'].delete('3')
   
   RAWS::SDB['test_domain'].delete_domain
+
+  require 'rubygems'
+  require 'raws'
+  
+  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
+  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  
+  class Foo
+    include RAWS::SDB::Model
+    self.domain_name = 'test_domain'
+
+    sdb_accessor 'a', 'b'
+  end
+  
+  Foo.create_domain
+  sleep 60
+  
+  foo1 = Foo.new('a' => '10', 'b' => '100', 'c' => ['1000a', '1000b'])
+  foo1.save
+  
+  foo2 = Foo.new
+  foo2['a'] = '20'
+  foo2['b'] = ['200a', '200b']
+  foo2['c'] = '2000'
+  foo2.save
+  
+  foo3 = Foo.new
+  foo3.a = ['30a', '30b']
+  foo3.b = '300'
+  foo3['c'] = '3000'
+  foo3.save
+  
+  Foo.select do |a|
+    p [a['a'], a['b'], a['c']]
+    a.delete
+  end
+  
+  Foo.select.where('a = ?', '10') do |a|
+    p [a['a'], a['b'], a['c']]
+    a.delete
+  end
+  
+  Foo.delete_domain
 
 == S3 (Amazon Simple Storage Service)

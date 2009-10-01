@@ -23,8 +23,8 @@ module RAWS::SDB::Model
       RAWS::SDB[domain_name].delete_domain
     end
 
-    def select
-      Select.new(self).from(domain_name)
+    def select(&block)
+      Select.new(self).from(domain_name, &block)
     end
 
     def find(id)
