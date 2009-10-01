@@ -75,10 +75,10 @@ class RAWS::SQS::Adapter
       RAWS.fetch('GET', queue_url, PARAMS.merge(params))
     end
 
-    def receive_message(queue_url, num_msgs=nil, timeout=nil, *attrs)
+    def receive_message(queue_url, limit=nil, timeout=nil, *attrs)
       params = {'Action' => 'ReceiveMessage'}
-      params['MaxNumberOfMessages'] = num_msgs if num_msgs
-      params['VisibilityTimeout']   = timeout  if timeout
+      params['MaxNumberOfMessages'] = limit   if limit
+      params['VisibilityTimeout']   = timeout if timeout
       params.merge!(pack_attrs(attrs))
 
       RAWS.fetch(

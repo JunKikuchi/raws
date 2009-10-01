@@ -61,13 +61,15 @@ class RAWS::SQS
       Adapter.send_message(queue_url, msg)
     end
 
-    def receive(queue_url, num_msgs=nil, timeout=nil, *attrs)
-      Adapter.receive_message(
+    def receive(queue_url, params={}, *attrs, &block)
+      messages = Adapter.receive_message(
         queue_url,
-        num_msgs,
-        timeout,
+        params[:limit],
+        params[:timeout],
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
+      messages.each(&block) if block_given?
+      messages
     end
 
     def change_message_visibility(queue_url, handle, timeout)
@@ -132,9 +134,15 @@ class RAWS::SQS
     self.class.send(queue_url, msg)
   end
 
-  def receive(num_msgs=nil, timeout=nil, *attrs)
-    self.class.receive(queue_url, num_msgs, timeout, *attrs).map do |val|
-      Message.new(self, val)
+  def receive(params={}, *attrs, &block)
+    if block_given?
+      self.class.receive(queue_url, params, *attrs) do |val|
+        block.call(Message.new(self, val))
+      end
+    else
+      self.class.receive(queue_url, params, *attrs).map do |val|
+        Message.new(self, val)
+      end
     end
   end
 
