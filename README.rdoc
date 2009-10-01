@@ -7,8 +7,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'rubygems'
   require 'raws'
   
-  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
-  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
+  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SQS.create_queue('test_queue')
   
@@ -32,8 +32,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'rubygems'
   require 'raws'
   
-  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
-  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
+  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SDB.create_domain('test_domain')
   
@@ -68,8 +68,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'rubygems'
   require 'raws'
   
-  RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
-  RAWS.aws_secret_access_key =  AWS_SECRET_ACCESS_KEY
+  RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
+  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
   
   class Foo
     include RAWS::SDB::Model
