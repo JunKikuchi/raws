@@ -29,9 +29,11 @@ class RAWS::SQS
     end
 
     def list(prefix=nil)
-      Adapter.list_queues(
-        prefix
-      )['ListQueuesResponse']['ListQueuesResult']['QueueUrl'].map do |val|
+      (
+        Adapter.list_queues(
+          prefix
+        )['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
+      ).map do |val|
         self.new(val)
       end
     end

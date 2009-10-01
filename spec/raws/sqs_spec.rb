@@ -1,6 +1,18 @@
 require 'spec/spec_config'
 
 describe RAWS::SQS do
+  before :all do
+    RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
+    puts 'waiting 60 sec...'
+    sleep 60
+  end
+
+  after :all do
+    RAWS::SQS[RAWS_SQS_QUEUE].delete_queue
+    puts 'waiting 60 sec...'
+    sleep 60
+  end
+
   describe 'class' do
     it 'methods' do
       %w'
@@ -17,14 +29,6 @@ describe RAWS::SQS do
       '.each do |val|
         RAWS::SQS.should respond_to val.to_sym
       end
-    end
-
-    it 'create_queue' do
-      RAWS::SQS.create_queue RAWS_SQS_QUEUE
-    end
-
-    it 'delete_queue' do
-      #RAWS::SQS.create_queue RAWS::SQS.queue_url(RAWS_SQS_QUEUE)
     end
 
     it 'list' do
