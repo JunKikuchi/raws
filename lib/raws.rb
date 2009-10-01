@@ -6,9 +6,6 @@ require 'rubygems'
 require 'typhoeus'
 require 'nokogiri'
 
-path = File.expand_path(File.dirname(__FILE__))
-$:.unshift(path) unless $:.include?(path)
-
 module RAWS
   include Typhoeus
 
