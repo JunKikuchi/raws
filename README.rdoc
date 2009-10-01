@@ -18,7 +18,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   RAWS::SQS['test_queue'].send('hello2')
   RAWS::SQS['test_queue'].send('hello3')
   
-  RAWS::SQS['test_queue'].receive(:limit => 10) do |msg|
+  RAWS::SQS['test_queue'].receive(:limit => 10).each do |msg|
     p msg.body
     msg.delete
   end
