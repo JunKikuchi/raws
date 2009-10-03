@@ -18,6 +18,9 @@ begin
     ) + Dir.glob("{bin,doc,lib}/**/*")
     s.require_path = "lib"
     s.has_rdoc = true
+    s.add_dependency('pauldix-typhoeus', '>=0.1.2')
+    s.add_dependency('nokogiri', '>=1.3.3')
+    s.add_dependency('uuidtools', '>=2.0.0')
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
