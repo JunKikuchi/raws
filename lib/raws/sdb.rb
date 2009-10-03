@@ -55,6 +55,7 @@ class RAWS::SDB
         end if data.key? 'Item'
       end while next_token = data['NextToken']
     end
+    alias :all :select
 
     def get(domain_name, item_name, *attrs)
       Adapter.get_attributes(
@@ -98,6 +99,7 @@ class RAWS::SDB
   def select(output_list='*', &block)
     Select.new.columns(output_list).from(domain_name, &block)
   end
+  alias :all :select
 
   def get(item_name, *attrs)
     self.class.get(domain_name, item_name, *attrs)

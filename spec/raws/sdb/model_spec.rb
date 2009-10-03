@@ -12,6 +12,7 @@ describe RAWS::SDB::Model do
         create_domain
         delete_domain
         select
+        all
         generate_id
       '.each do |val|
         SDBModel.should respond_to val.to_sym

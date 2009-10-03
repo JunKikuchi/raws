@@ -8,7 +8,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'raws'
   
   RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
-  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
+  RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SQS.create_queue('test_queue')
   sleep 60
@@ -32,7 +32,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'raws'
   
   RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
-  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
+  RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
   
   RAWS::SDB.create_domain('test_domain')
   sleep 60
@@ -45,12 +45,12 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   p RAWS::SDB['test_domain'].get('2')
   p RAWS::SDB['test_domain'].get('3')
   
-  RAWS::SDB['test_domain'].select do |a|
+  RAWS::SDB['test_domain'].all.each do |a|
     key, data = a
     p [key, data]
   end
 
-  RAWS::SDB['test_domain'].select.where('a = ?', 10) do |a|
+  RAWS::SDB['test_domain'].all.filter('a = ?', 10).each do |a|
     key, data = a
     p [key, data]
   end
@@ -67,7 +67,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   require 'raws'
   
   RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
-  RAWS.aws_secret_access_key =  _AWS_SECRET_ACCESS_KEY_
+  RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
   
   class Foo
     include RAWS::SDB::Model
@@ -94,12 +94,11 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   foo3['c'] = '3000'
   foo3.save
   
-  Foo.select do |a|
+  Foo.all.each do |a|
     p [a.a, a['b'], a['c']]
-    a.delete
   end
   
-  Foo.select.where('a = ?', '10') do |a|
+  Foo.all.filter('a = ?', '10').each do |a|
     p [a.a, a.b, a['c']]
     a.delete
   end

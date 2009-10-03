@@ -37,6 +37,7 @@ describe RAWS::SDB do
         each
         []
         select
+        all
         get
         put
         batch_put
@@ -90,6 +91,18 @@ describe RAWS::SDB do
       end
 
       RAWS::SDB[RAWS_SDB_DOMAIN].select.where('b = ?', 20) do |val|
+        val.first.should be_kind_of(String)
+        val.last.should be_kind_of(Hash)
+      end
+    end
+
+    it 'all' do
+      RAWS::SDB[RAWS_SDB_DOMAIN].all do |val|
+        val.first.should be_kind_of(String)
+        val.last.should be_kind_of(Hash)
+      end
+
+      RAWS::SDB[RAWS_SDB_DOMAIN].all.filter('b = ?', 20) do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
@@ -201,6 +214,7 @@ describe RAWS::SDB do
         delete_domain
         metadata
         select
+        all
         get
         put
         batch_put
@@ -236,6 +250,18 @@ describe RAWS::SDB do
       end
 
       @sdb.select.where('b = ?', 20) do |val|
+        val.first.should be_kind_of(String)
+        val.last.should be_kind_of(Hash)
+      end
+    end
+
+    it 'all' do
+      @sdb.all do |val|
+        val.first.should be_kind_of(String)
+        val.last.should be_kind_of(Hash)
+      end
+
+      @sdb.all.filter('b = ?', 20) do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end

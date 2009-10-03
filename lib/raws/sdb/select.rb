@@ -10,44 +10,54 @@ class RAWS::SDB::Select
     @limit       = nil
   end
 
-  def fetch(&block)
-    RAWS::SDB.select(*to_sql) do |val|
-      block.call(attr_filter(val))
-    end
-  end
-
   def attr_filter(val)
     val
   end
 
-  def columns(*val, &block)
+  def each(&block)
+    RAWS::SDB.select(*to_sql) do |val|
+      block.call(attr_filter(val))
+    end
+  end
+  alias :fetch :each
+
+  def get
+    ret = nil
+
+    _limit = @limit
+    limit(1)
+    each do |val|
+      ret = val
+    end
+    @limit = _limit
+
+    ret
+  end
+
+  def columns(*val)
     @output_list = val.join(',')
-    fetch(&block) if block_given?
     self
   end
 
-  def from(val, &block)
+  def from(val)
     @domain = val
-    fetch(&block) if block_given?
     self
   end
 
-  def where(condition, *values, &block)
+  def where(condition, *values)
     @condition = condition
     @values    = values
-    fetch(&block) if block_given?
     self
   end
+  alias :filter :where
 
-  def order(val, &block)
+  def order(val)
     @sort = val
-    fetch(&block) if block_given?
     self
   end
 
-  def limit(val, &block)
+  def limit(val)
     @limit = val
-    fetch(&block) if block_given?
     self
   end
 

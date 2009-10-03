@@ -26,6 +26,7 @@ module RAWS::SDB::Model
     def select(&block)
       Select.new(self).from(domain_name, &block)
     end
+    alias :all :select
 
     def find(id)
       if attrs = RAWS::SDB[domain_name].get(id)
