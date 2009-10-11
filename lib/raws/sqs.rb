@@ -2,6 +2,8 @@ class RAWS::SQS
   autoload :Adapter, 'raws/sqs/adapter'
 
   class << self
+    include Enumerable
+
     def queue_url(queue_name)
       data = Adapter.list_queues(
         queue_name
@@ -154,5 +156,9 @@ class RAWS::SQS
 
   def remove_permission(label)
     self.class.remove_permission(queue_url, label)
+  end
+
+  def <=>(a)
+    queue_name <=> a.queue_name
   end
 end

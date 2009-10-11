@@ -4,6 +4,8 @@ class RAWS::SDB
   autoload :Model,   'raws/sdb/model'
 
   class << self
+    include Enumerable
+
     def create_domain(domain_name)
       Adapter.create_domain(domain_name)
     end
@@ -115,5 +117,9 @@ class RAWS::SDB
 
   def delete(item_name, attrs={})
     self.class.delete(domain_name, item_name, attrs)
+  end
+
+  def <=>(a)
+    domain_name <=> a.domain_name
   end
 end

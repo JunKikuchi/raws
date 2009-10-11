@@ -1,4 +1,6 @@
 class RAWS::SDB::Select
+  include Enumerable
+
   RESERVED_KEYWORD = %w'or and not from where select like null is order by asc desc in between intersection limit every'
 
   def initialize
