@@ -45,16 +45,27 @@ class RAWS::S3::Adapter
       }"
     end
 
-    def fetch(http_verb, _uri={}, options={}, content=nil, type='')
-      date = Time.now.httpdate
-      uri = URI_PARAMS.merge(_uri)
+    def fetch(http_verb, _params={}, options={}, content=nil, type='')
+      date   = Time.now.httpdate
+      params = URI_PARAMS.merge(_params)
+      path   = params[:path]
+
+      if params[:bucket]
+        bucket = params[:bucket]
+        if bucket.include?('.')
+          params[:path] = '/' + bucket + params[:path]
+          params.delete(:bucket)
+        end
+        path = '/%s%s' % [bucket, params[:path]]
+      end
+
       r = RAWS.__send__(
         http_verb.downcase.to_sym,
-        build_uri(uri),
+        build_uri(params),
         :headers => {
           'Date' => date,
           'Authorization' => "AWS #{
-            sign(http_verb, content, type, date, uri[:path])
+            sign(http_verb, content, type, date, path)
           }"
         }
       )
@@ -67,11 +78,11 @@ class RAWS::S3::Adapter
     end
 
     def get_service
-      fetch('GET', {}, :multiple => 'Bucket')
+      fetch('GET', {}, :multiple => ['Bucket'])
     end
 
-    def put_bucket(bucket_name)
-      fetch('PUT', :path => "/#{bucket_name}")
+    def put_bucket(bucket_name, location=nil)
+      fetch('PUT', :bucket => bucket_name)
     end
 
     def put_request_payment(bucket_name)
@@ -115,7 +126,7 @@ class RAWS::S3::Adapter
     end
 
     def delete_bucket(bucket_name)
-      fetch('DELETE', :path => "/#{bucket_name}")
+      fetch('DELETE', :bucket => bucket_name)
     end
   end
 
