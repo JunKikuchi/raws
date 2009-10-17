@@ -50,13 +50,12 @@ class RAWS::S3::Adapter
       params = URI_PARAMS.merge(_params)
       path   = params[:path]
 
-      if params[:bucket]
-        bucket = params[:bucket]
+      if bucket = params[:bucket]
         if bucket.include?('.')
-          params[:path] = '/' + bucket + params[:path]
+          params[:path] = '/' << bucket << params[:path]
           params.delete(:bucket)
         end
-        path = '/%s%s' % [bucket, params[:path]]
+        path = '/' << bucket << params[:path]
       end
 
       r = RAWS.__send__(
