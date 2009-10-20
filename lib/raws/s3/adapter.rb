@@ -41,11 +41,9 @@ class RAWS::S3::Adapter
       date   = Time.now.httpdate
       params = URI_PARAMS.dup.merge(_params)
 
-      unless params[:query].empty?
-        params[:path] = params[:path ] + '?' << params[:query].map do |key, val|
-          val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
-        end.sort.join(';')
-      end
+      params[:path] += '?' << params[:query].map do |key, val|
+        val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
+      end.sort.join(';') unless params[:query].empty?
 
       sign_path = if bucket = params[:bucket]
         if bucket.include?('.')
