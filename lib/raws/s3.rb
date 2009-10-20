@@ -13,7 +13,8 @@ class RAWS::S3
     end
 
     def location(bucket_name)
-      Adapter.get_bucket_location(bucket_name)
+      location = Adapter.get_bucket_location(bucket_name)['LocationConstraint']
+      location.empty? && 'US'
     end
 
     def list

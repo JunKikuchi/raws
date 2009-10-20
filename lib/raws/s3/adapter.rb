@@ -16,15 +16,7 @@ class RAWS::S3::Adapter
         else
           params[:host]
         end
-      }#{params[:path]}#{
-        if params[:query].empty?
-          ''
-        else
-          '?' << a[:query].map do |key, val|
-            val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
-          end.sort.join(';')
-        end
-      }"
+      }#{params[:path]}"
     end
 
     def sign(http_verb, content, type, date, path)
@@ -47,15 +39,23 @@ class RAWS::S3::Adapter
 
     def fetch(http_verb, _params={}, options={}, content=nil, type='')
       date   = Time.now.httpdate
-      params = URI_PARAMS.merge(_params)
-      path   = params[:path]
+      params = URI_PARAMS.dup.merge(_params)
 
-      if bucket = params[:bucket]
+      unless params[:query].empty?
+        params[:path] = params[:path ] + '?' << params[:query].map do |key, val|
+          val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
+        end.sort.join(';')
+      end
+
+      sign_path = if bucket = params[:bucket]
         if bucket.include?('.')
-          params[:path] = '/' << bucket << params[:path]
           params.delete(:bucket)
+          params[:path] = "/#{bucket}#{params[:path]}"
+        else
+          "/#{bucket}#{params[:path]}"
         end
-        path = '/' << bucket << params[:path]
+      else
+        params[:path]
       end
 
       r = RAWS.__send__(
@@ -64,7 +64,7 @@ class RAWS::S3::Adapter
         :headers => {
           'Date' => date,
           'Authorization' => "AWS #{
-            sign(http_verb, content, type, date, path)
+            sign(http_verb, content, type, date, sign_path)
           }"
         }
       )
@@ -98,8 +98,9 @@ class RAWS::S3::Adapter
       fetch(
         'GET',
         {
-          :bucket => bucket_name,
-          :query  => params
+          :bucket   => bucket_name,
+          :query    => params,
+          :multiple => ['Contents']
         }
       )
     end
