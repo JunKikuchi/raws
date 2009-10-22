@@ -19,7 +19,7 @@ class RAWS::S3::Adapter
       }#{params[:path]}"
     end
 
-    def sign(http_verb, content, type, date, path)
+    def sign(http_verb, content, header, path)
       "#{RAWS.aws_access_key_id}:#{
         [
           ::OpenSSL::HMAC.digest(
@@ -28,8 +28,8 @@ class RAWS::S3::Adapter
             [
               http_verb,
               content ? Digest::MD5.hexdigest(content) : '',
-              type,
-              date,
+              header['Content-Type'],
+              header['Date'],
               path
             ].join("\n")
           )
@@ -37,9 +37,8 @@ class RAWS::S3::Adapter
       }"
     end
 
-    def fetch(http_verb, _params={}, options={}, content=nil, type='')
-      date   = Time.now.httpdate
-      params = URI_PARAMS.dup.merge(_params)
+    def fetch(http_verb, _params={}, options={}, content=nil, _header={})
+      params = URI_PARAMS.merge(_params)
 
       params[:path] += '?' << params[:query].map do |key, val|
         val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
@@ -56,15 +55,15 @@ class RAWS::S3::Adapter
         params[:path]
       end
 
+      header = _header.merge({'Date' => Time.now.httpdate })
+      header['Authorization'] = "AWS #{
+        sign(http_verb, content, header, sign_path)
+      }"
+
       r = RAWS.__send__(
         http_verb.downcase.to_sym,
         build_uri(params),
-        :headers => {
-          'Date' => date,
-          'Authorization' => "AWS #{
-            sign(http_verb, content, type, date, sign_path)
-          }"
-        }
+        :headers => header
       )
       data = RAWS.parse(Nokogiri::XML.parse(r.body), options)
       if 200 <= r.code && r.code <= 299
@@ -96,10 +95,10 @@ class RAWS::S3::Adapter
       fetch(
         'GET',
         {
-          :bucket   => bucket_name,
-          :query    => params,
-          :multiple => ['Contents']
-        }
+          :bucket => bucket_name,
+          :query  => params
+        },
+        :multiple => ['Contents']
       )
     end
 
@@ -125,6 +124,16 @@ class RAWS::S3::Adapter
 
     def delete_bucket(bucket_name)
       fetch('DELETE', :bucket => bucket_name)
+    end
+
+    def put_object(bucket_name, object, header)
+      fetch(
+        'PUT',
+        {:bucket => bucket_name},
+        {},
+        object,
+        header
+      )
     end
   end
 
