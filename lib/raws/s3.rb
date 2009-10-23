@@ -37,7 +37,8 @@ class RAWS::S3
       )['ListBucketResult']['Contents'] || []
     end
 
-    def put(bucket_name, object)
+    def put(bucket_name, name, object, header={})
+      Adapter.put_object(bucket_name, name, object, header)
     end
 
     def copy(bucket_name)

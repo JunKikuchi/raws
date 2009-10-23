@@ -19,7 +19,7 @@ class RAWS::S3::Adapter
       }#{params[:path]}"
     end
 
-    def sign(http_verb, content, header, path)
+    def sign(http_verb, header, path)
       "#{RAWS.aws_access_key_id}:#{
         [
           ::OpenSSL::HMAC.digest(
@@ -27,9 +27,9 @@ class RAWS::S3::Adapter
             RAWS.aws_secret_access_key,
             [
               http_verb,
-              content ? Digest::MD5.hexdigest(content) : '',
-              header['Content-Type'],
-              header['Date'],
+              header['content-md5'],
+              header['content-type'],
+              header['date'],
               path
             ].join("\n")
           )
@@ -52,18 +52,19 @@ class RAWS::S3::Adapter
           "/#{bucket}#{params[:path]}"
         end
       else
-        params[:path]
+         params[:path]
       end
 
-      header = _header.merge({'Date' => Time.now.httpdate })
-      header['Authorization'] = "AWS #{
-        sign(http_verb, content, header, sign_path)
-      }"
+      header = _header.merge({'date' => Time.now.httpdate })
+      header['authorization'] = 'AWS ' << sign(http_verb, header, sign_path)
 
       r = RAWS.__send__(
         http_verb.downcase.to_sym,
         build_uri(params),
-        :headers => header
+        {
+          :headers => header,
+          :body    => content
+        }
       )
       data = RAWS.parse(Nokogiri::XML.parse(r.body), options)
       if 200 <= r.code && r.code <= 299
@@ -126,10 +127,13 @@ class RAWS::S3::Adapter
       fetch('DELETE', :bucket => bucket_name)
     end
 
-    def put_object(bucket_name, object, header)
+    def put_object(bucket_name, name, object, header={})
       fetch(
         'PUT',
-        {:bucket => bucket_name},
+        {
+          :bucket => bucket_name,
+          :path   => '/' << name
+        },
         {},
         object,
         header
