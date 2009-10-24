@@ -13,7 +13,7 @@ module RAWS
     attr_reader :response
     attr_reader :data
 
-    def initialize(response, data)
+    def initialize(response, data=nil)
       super()
       @response, @data = response, data
     end

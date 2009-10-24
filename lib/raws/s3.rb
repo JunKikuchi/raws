@@ -41,16 +41,24 @@ class RAWS::S3
       Adapter.put_object(bucket_name, name, object, header)
     end
 
-    def copy(bucket_name)
+    def copy(src_bucket, src_name, dest_bucket, dest_name)
+      Adapter.copy_object(src_bucket, src_name, dest_bucket, dest_name)
     end
 
-    def get(bucket_name)
+    def get(bucket_name, name)
+      Adapter.get_object(bucket_name, name)
     end
 
-    def head(bucket_name)
+    def head(bucket_name, name)
+      Adapter.head_object(bucket_name, name)
     end
 
-    def delete(bucket_name)
+    def delete(bucket_name, name)
+      Adapter.delete_object(bucket_name, name)
+    end
+
+    def acl(bucket_name, name=nil)
+      Adapter.get_acl(bucket_name, name)
     end
   end
 
