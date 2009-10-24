@@ -25,13 +25,20 @@ class RAWS::S3::Adapter
           ::OpenSSL::HMAC.digest(
             ::OpenSSL::Digest::SHA1.new,
             RAWS.aws_secret_access_key,
-            [
-              http_verb,
-              header['content-md5'],
-              header['content-type'],
-              header['date'],
-              path
-            ].join("\n")
+            (
+              [
+                http_verb,
+                header['content-md5'],
+                header['content-type'],
+                header['date']
+              ] + header.select do |key, val|
+                /^x-amz-/.match(key)
+              end.map do |key,val|
+                "#{key}:#{val}"
+              end + [
+                path
+              ]
+            ).join("\n")
           )
         ].pack('m').strip
       }"
