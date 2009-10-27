@@ -26,6 +26,14 @@ class RAWS::S3::Adapter
       end
     end
 
+    class Redirect < StandardError
+      attr_reader :response
+
+      def initialize(response)
+        @response = Response.new(response)
+      end
+    end
+
     def sign(http_verb, header, path)
       "#{RAWS.aws_access_key_id}:#{
         [
@@ -74,33 +82,36 @@ class RAWS::S3::Adapter
         end
       )
 
-      uri = "#{request[:scheme]}://#{
-        if request[:bucket]
-          "#{request[:bucket]}.#{request[:host]}"
-        else
-          request[:host]
-        end
-      }#{request[:path]}"
+      if request[:bucket]
+        request[:host] = "#{request[:bucket]}.#{request[:host]}"
+      end
 
-      r = RAWS.__send__(
-        http_verb.downcase.to_sym,
-        uri,
-        {
-          :headers => header,
-          :body    => content
-        }
-      )
+      uri = "#{request[:scheme]}://#{request[:host]}#{request[:path]}"
 
-      if 200 <= r.code && r.code <= 299
-        if params[:noparse]
-          Response.new(r)
+      begin
+        r = RAWS.__send__(
+          http_verb.downcase.to_sym,
+          uri,
+          {
+            :headers => header,
+            :body    => content
+          }
+        )
+
+        if 200 <= r.code && r.code <= 299
+          if params[:noparse]
+            Response.new(r)
+          else
+            RAWS.parse(Nokogiri::XML.parse(r.body), params[:parser] || {})
+          end
+        elsif 300 <= r.code && r.code <= 399
+          raise Redirect.new(r)
         else
-          RAWS.parse(Nokogiri::XML.parse(r.body), params[:parser] || {})
+          raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
         end
-      #elsif 300 <= r.code && r.code <= 399
-        # TODO: redirect
-      else
-        raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
+      rescue Redirect => e
+        uri = e.response.header['location']
+        retry
       end
     end
 
