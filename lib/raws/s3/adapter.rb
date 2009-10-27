@@ -51,61 +51,56 @@ class RAWS::S3::Adapter
       }"
     end
 
-    def fetch(http_verb, _params, _header={}, content=nil)
-      _params[:request] ||= {}
-      _params[:parser]  ||= {}
+    def fetch(http_verb, params, header={}, content=nil)
+      request = URI_PARAMS.merge(params[:request] || {})
 
-      params = URI_PARAMS.merge(_params[:request])
-
-      params[:path] += '?' << params[:query].map do |key, val|
+      request[:path] += '?' << request[:query].map do |key, val|
         val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
-      end.sort.join(';') unless params[:query].empty?
+      end.sort.join(';') unless request[:query].empty?
 
-      header = _header.merge({'date' => Time.now.httpdate})
+      header['date'] = Time.now.httpdate
       header['authorization'] = 'AWS ' << sign(
         http_verb,
         header,
-        if bucket = params[:bucket]
+        if bucket = request[:bucket]
           if bucket.include?('.')
-            params.delete(:bucket)
-            params[:path] = "/#{bucket}#{params[:path]}"
+            request.delete(:bucket)
+            request[:path] = "/#{bucket}#{request[:path]}"
           else
-            "/#{bucket}#{params[:path]}"
+            "/#{bucket}#{request[:path]}"
           end
         else
-           params[:path]
+           request[:path]
         end
       )
 
-      uri = "#{params[:scheme]}://#{
-        if params[:bucket]
-          "#{params[:bucket]}.#{params[:host]}"
+      uri = "#{request[:scheme]}://#{
+        if request[:bucket]
+          "#{request[:bucket]}.#{request[:host]}"
         else
-          params[:host]
+          request[:host]
         end
-      }#{params[:path]}"
+      }#{request[:path]}"
 
-      begin
-        r = RAWS.__send__(
-          http_verb.downcase.to_sym,
-          uri,
-          {
-            :headers => header,
-            :body    => content
-          }
-        )
+      r = RAWS.__send__(
+        http_verb.downcase.to_sym,
+        uri,
+        {
+          :headers => header,
+          :body    => content
+        }
+      )
 
-        if 200 <= r.code && r.code <= 299
-          if _params[:noparse]
-            Response.new(r)
-          else
-            RAWS.parse(Nokogiri::XML.parse(r.body), _params[:parser])
-          end
-        #elsif 300 <= r.code && r.code <= 399
-          # TODO: redirect
+      if 200 <= r.code && r.code <= 299
+        if params[:noparse]
+          Response.new(r)
         else
-          raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
+          RAWS.parse(Nokogiri::XML.parse(r.body), params[:parser] || {})
         end
+      #elsif 300 <= r.code && r.code <= 399
+        # TODO: redirect
+      else
+        raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
       end
     end
 
