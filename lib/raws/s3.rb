@@ -4,8 +4,8 @@ class RAWS::S3
   class << self
     include Enumerable
 
-    def create_bucket(bucket_name)
-      Adapter.put_bucket(bucket_name)
+    def create_bucket(bucket_name, location=nil)
+      Adapter.put_bucket(bucket_name, location)
     end
 
     def delete_bucket(bucket_name)
@@ -14,7 +14,7 @@ class RAWS::S3
 
     def location(bucket_name)
       location = Adapter.get_bucket_location(bucket_name)['LocationConstraint']
-      location.empty? && 'US'
+      location.empty? ? 'US' : location
     end
 
     def list

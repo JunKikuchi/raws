@@ -38,7 +38,7 @@ module RAWS
       end.sort.join('&')
 
       uri = URI.parse(base_uri)
-      "#{path}&Signature=" + escape(
+      "#{path}&Signature=" << escape(
         [
           ::OpenSSL::HMAC.digest(
             ::OpenSSL::Digest::SHA256.new,
