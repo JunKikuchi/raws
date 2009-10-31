@@ -6,6 +6,8 @@ module RAWS
       include ::Typhoeus
 
       def fetch(http_verb, uri, header={}, body=nil, parser=nil)
+        RAWS.logger.debug([http_verb, uri, header, body, parser])
+
         begin
           response = self.class.__send__(
             http_verb.downcase.to_sym,
@@ -15,6 +17,9 @@ module RAWS
               :body    => body
             }
           )
+
+          RAWS.logger.debug(response)
+
           case response.code
           when 200...300
             Response.new(response, parser)
@@ -24,7 +29,8 @@ module RAWS
             raise Error.new(Response.new(response))
           end
         rescue Redirect => e
-          p uri = e.response.header['location']
+          r = e.response
+          uri = r.header['location'] || r.doc['Error']['Endpoint']
           retry
         end
       end
