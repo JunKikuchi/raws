@@ -141,9 +141,20 @@ module RAWS
         raise Error.new(r, data)
       end
     end
+
+    def http
+      @http ||= HTTP::Typhoeus.new
+    end
+
+    def xml
+      @xml ||= XML::Nokogiri.new
+    end
   end
 
-  autoload :SDB, 'raws/sdb'
-  autoload :SQS, 'raws/sqs'
-  autoload :S3,  'raws/s3'
+  autoload :HTTP, 'raws/http'
+  autoload :XML,  'raws/xml'
+
+  autoload :SDB,  'raws/sdb'
+  autoload :SQS,  'raws/sqs'
+  autoload :S3,   'raws/s3'
 end
