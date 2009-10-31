@@ -35,25 +35,32 @@ class RAWS::S3::Adapter
     def fetch(http_verb, params={}, header={}, content=nil, parser={})
       params = URI_PARAMS.merge(params)
 
-      params[:path] += '?' << params[:query].map do |key, val|
-        val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
-      end.sort.join(';') unless params[:query].empty?
+      path = if bucket = params[:bucket]
+        if bucket.include?('.')
+          params.delete(:bucket)
+          params[:path] = "/#{bucket}#{params[:path]}"
+        else
+          "/#{bucket}#{params[:path]}"
+        end
+      else
+        params[:path]
+      end
+
+      unless params[:query].empty?
+        params[:path] += '?' << params[:query].map do |key, val|
+          val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
+        end.sort.join(';')
+
+        %w'acl location logging torrent'.each do |val|
+          if params[:query].key?(val)
+            path << "?#{val}"
+            break
+          end
+        end
+      end
 
       header['date'] = Time.now.httpdate
-      header['authorization'] = 'AWS ' << sign(
-        http_verb,
-        header,
-        if bucket = params[:bucket]
-          if bucket.include?('.')
-            params.delete(:bucket)
-            params[:path] = "/#{bucket}#{params[:path]}"
-          else
-            "/#{bucket}#{params[:path]}"
-          end
-        else
-           params[:path]
-        end
-      )
+      header['authorization'] = 'AWS ' << sign(http_verb, header, path)
 
       params[:host] = "#{params[:bucket]}.#{params[:host]}" if params[:bucket]
 
