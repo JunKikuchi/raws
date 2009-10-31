@@ -109,8 +109,8 @@ class RAWS::S3
     self.class.copy(@bucket_name, name, dest_bucket, dest_name)
   end
 
-  def get(name)
-    self.class.get(@bucket_name, name)
+  def get(name, params={})
+    self.class.get(@bucket_name, name, params)
   end
 
   def delete(name)
