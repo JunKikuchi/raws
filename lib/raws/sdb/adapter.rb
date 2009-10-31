@@ -5,6 +5,31 @@ class RAWS::SDB::Adapter
     KEYWORDS = %w'or and not from where select like null is order by asc desc in between intersection limit every'
     REXP_NAME = /^[a-zA-Z_$]/
 
+    def pack_attrs(attrs, replaces=nil, prefix=nil)
+      params = {}
+
+      i = 1
+      attrs.each do |key, val|
+        if !replaces.nil? && replaces.include?(key)
+          params["#{prefix}Attribute.#{i}.Replace"] = 'true'
+        end
+
+        if val.is_a? Array
+          val.each do |v|
+            params["#{prefix}Attribute.#{i}.Name"]  = key
+            params["#{prefix}Attribute.#{i}.Value"] = v
+            i += 1
+          end
+        else
+          params["#{prefix}Attribute.#{i}.Name"]  = key
+          params["#{prefix}Attribute.#{i}.Value"] = val
+          i += 1
+        end
+      end
+
+      params
+    end
+
     def create_domain(domain_name)
       params = {
         'Action'     => 'CreateDomain',
@@ -68,7 +93,7 @@ class RAWS::SDB::Adapter
         'DomainName' => domain_name,
         'ItemName'   => item_name
       }
-      params.merge!(RAWS.pack_attrs(attrs, replaces))
+      params.merge!(pack_attrs(attrs, replaces))
 
       RAWS.fetch('GET', URI, PARAMS.merge(params))
     end
@@ -82,7 +107,7 @@ class RAWS::SDB::Adapter
       i = 0
       items.each do |key, attrs|
         params["Item.#{i}.ItemName"] = key
-        params.merge!(RAWS.pack_attrs(attrs, replaces[key], "Item.#{i}."))
+        params.merge!(pack_attrs(attrs, replaces[key], "Item.#{i}."))
         i += 1
       end
 
@@ -95,7 +120,7 @@ class RAWS::SDB::Adapter
         'DomainName' => domain_name,
         'ItemName'   => item_name
       }
-      params.merge!(RAWS.pack_attrs(attrs))
+      params.merge!(pack_attrs(attrs))
 
       RAWS.fetch('GET', URI, PARAMS.merge(params))
     end

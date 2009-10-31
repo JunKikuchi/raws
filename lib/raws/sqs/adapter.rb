@@ -3,6 +3,22 @@ class RAWS::SQS::Adapter
     URI = 'https://queue.amazonaws.com/'
     PARAMS = {'Version' => '2009-02-01'}
 
+    def pack_attrs(attrs)
+      params = {}
+
+      if(attrs.size == 1)
+        params["AttributeName"] = attrs.first
+      else
+        i = 1
+        attrs.each do |val|
+          params["AttributeName.#{i}"] = val
+          i += 1
+        end
+      end
+
+      params
+    end
+
     def create_queue(queue_name, timeout=nil)
       params = {
         'Action'    => 'CreateQueue',
@@ -24,22 +40,6 @@ class RAWS::SQS::Adapter
       params['QueueNamePrefix'] = prefix if prefix
 
       RAWS.fetch('GET', URI, PARAMS.merge(params), 'QueueUrl')
-    end
-
-    def pack_attrs(attrs)
-      params = {}
-
-      if(attrs.size == 1)
-        params["AttributeName"] = attrs.first
-      else
-        i = 1
-        attrs.each do |val|
-          params["AttributeName.#{i}"] = val
-          i += 1
-        end
-      end
-
-      params
     end
 
     def get_queue_attributes(queue_url, *attrs)

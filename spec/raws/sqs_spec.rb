@@ -1,16 +1,25 @@
 require 'spec/spec_config'
 
 describe RAWS::SQS do
+=begin
   before :all do
-    RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
-    puts '[waiting 60 secs]'
-    sleep 60
+    begin
+      RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
+      puts '[waiting 61 secs]'
+      sleep 61
+    rescue => e
+      d e
+    end
   end
 
   after :all do
-    RAWS::SQS[RAWS_SQS_QUEUE].delete_queue
-    puts '[waiting 60 secs]'
-    sleep 60
+    begin
+      RAWS::SQS[RAWS_SQS_QUEUE].delete_queue
+      puts '[waiting 61 secs]'
+      sleep 61
+    rescue => e
+      d e
+    end
   end
 
   describe 'class' do
@@ -47,7 +56,7 @@ describe RAWS::SQS do
       RAWS::SQS[RAWS_SQS_QUEUE].should be_kind_of RAWS::SQS
     end
   end
-
+=end
   describe 'object' do
     before do
       @queue = RAWS::SQS[RAWS_SQS_QUEUE]
