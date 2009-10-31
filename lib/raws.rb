@@ -155,6 +155,7 @@ module RAWS
       @logger ||= begin
         logger = Logger.new(STDERR)
         logger.progname = self.name
+        logger.level = Logger::INFO
         def logger.debug(val)
           require 'yaml'
           super(val.to_yaml)
