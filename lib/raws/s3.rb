@@ -56,8 +56,8 @@ class RAWS::S3
       )
     end
 
-    def get(bucket_name, name, query={}, parser=nil)
-      Adapter.get_object(bucket_name, name, query, parser)
+    def get(bucket_name, name, params={})
+      Adapter.get_object(bucket_name, name, params)
     end
 
     def head(bucket_name, name)
@@ -72,8 +72,8 @@ class RAWS::S3
       get(
         bucket_name,
         name,
-        {'acl' => nil},
-        {:multiple => ['Grant']}
+        :query  => {'acl' => nil},
+        :parser => {:multiple => ['Grant']}
       ).doc
     end
   end
