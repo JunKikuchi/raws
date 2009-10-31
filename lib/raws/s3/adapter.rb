@@ -166,16 +166,17 @@ class RAWS::S3::Adapter
       )
     end
 
-    def get_object(bucket_name, name)
+    def get_object(bucket_name, name=nil, query={}, parser=nil)
       fetch(
         'GET',
         {
           :bucket => bucket_name,
-          :path   => '/' << name
+          :path   => "/#{name}",
+          :query  => query
         },
         {},
         nil,
-        nil
+        parser
       )
     end
 
@@ -203,19 +204,7 @@ class RAWS::S3::Adapter
     end
 
     def get_acl(bucket_name, name)
-      fetch(
-        'GET',
-        {
-          :bucket => bucket_name,
-          :path   => '/' << name,
-          :query  => 'acl'
-        },
-        {},
-        nil,
-        {
-          :multiple => ['Grant']
-        }
-      )
+      get_object(bucket_name, name, {'acl' => nil}, {:multiple => ['Grant']})
     end
   end
 

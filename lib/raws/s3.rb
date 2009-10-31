@@ -19,8 +19,12 @@ class RAWS::S3
     end
 
     def list
-      response = Adapter.get_service
-      response.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
+      begin
+        response = Adapter.get_service
+        response.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
+      end.map do |val|
+        self.new(val['Name'], val['CreationDate'])
+      end
     end
 
     def each(&block)
@@ -43,12 +47,17 @@ class RAWS::S3
       Adapter.put_object(bucket_name, name, object, header)
     end
 
-    def copy(src_bucket, src_name, dest_bucket, dest_name)
-      Adapter.copy_object(src_bucket, src_name, dest_bucket, dest_name)
+    def copy(src_bucket, src_name, dest_bucket, dest_name=nil)
+      Adapter.copy_object(
+        src_bucket,
+        src_name,
+        dest_bucket,
+        dest_name || src_name
+      )
     end
 
-    def get(bucket_name, name)
-      Adapter.get_object(bucket_name, name)
+    def get(bucket_name, name, query={}, parser=nil)
+      Adapter.get_object(bucket_name, name, query, parser)
     end
 
     def head(bucket_name, name)
@@ -60,14 +69,20 @@ class RAWS::S3
     end
 
     def acl(bucket_name, name=nil)
-      Adapter.get_acl(bucket_name, name)
+      get(
+        bucket_name,
+        name,
+        {'acl' => nil},
+        {:multiple => ['Grant']}
+      ).doc
     end
   end
 
-  attr_reader :bucket_name
+  attr_reader :bucket_name, :creation_date
 
-  def initialize(bucket_name)
+  def initialize(bucket_name, creation_date=nil)
     @bucket_name = bucket_name
+    @creation_date = Time.parse(creation_date) if creation_date
   end
 
   def create_bucket(location=nil)
@@ -84,6 +99,26 @@ class RAWS::S3
 
   def filter(params={})
     self.class.filter(@bucket_name, params)
+  end
+
+  def put(name, object, attrs={})
+    self.class.put(@bucket_name, name, object, attrs)
+  end
+
+  def copy(name, dest_bucket, dest_name=nil)
+    self.class.copy(@bucket_name, name, dest_bucket, dest_name)
+  end
+
+  def get(name)
+    self.class.get(@bucket_name, name)
+  end
+
+  def delete(name)
+    self.class.delete(@bucket_name, name)
+  end
+
+  def acl(name=nil)
+    self.class.acl(@bucket_name, name)
   end
 
   def <=>(a)

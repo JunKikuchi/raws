@@ -45,13 +45,11 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   p RAWS::SDB['test_domain'].get('2')
   p RAWS::SDB['test_domain'].get('3')
   
-  RAWS::SDB['test_domain'].all.each do |a|
-    key, data = a
+  RAWS::SDB['test_domain'].all.each do |key, data|
     p [key, data]
   end
 
-  RAWS::SDB['test_domain'].all.filter('a = ?', 10).each do |a|
-    key, data = a
+  RAWS::SDB['test_domain'].all.filter('a = ?', 10).each do |key, data|
     p [key, data]
   end
   
@@ -106,3 +104,13 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   Foo.delete_domain
 
 == S3 (Amazon Simple Storage Service)
+
+  require 'rubygems'
+  require 'raws'
+  
+  RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
+  RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
+
+  RAWS::S3.create_bucket('test_bucket')
+  
+  RAWS::S3.delete_bucket('test_bucket')
