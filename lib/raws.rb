@@ -1,5 +1,6 @@
 require 'uri'
 require 'time'
+require 'logger'
 require 'openssl'
 
 require 'rubygems'
@@ -148,6 +149,18 @@ module RAWS
 
     def xml
       @xml ||= XML::Nokogiri.new
+    end
+
+    def logger
+      @logger ||= begin
+        logger = Logger.new(STDERR)
+        logger.progname = self.name
+        def logger.debug(val)
+          require 'yaml'
+          super(val.to_yaml)
+        end
+        logger
+      end
     end
   end
 
