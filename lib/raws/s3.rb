@@ -70,8 +70,8 @@ class RAWS::S3
     @bucket_name = bucket_name
   end
 
-  def create_bucket
-    self.class.create_bucket(@bucket_name)
+  def create_bucket(location=nil)
+    self.class.create_bucket(@bucket_name, location)
   end
 
   def delete_bucket
