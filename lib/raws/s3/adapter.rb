@@ -51,9 +51,9 @@ class RAWS::S3::Adapter
           val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
         end.sort.join(';')
 
-        %w'acl location logging torrent'.each do |val|
-          if params[:query].key?(val)
-            path << "?#{val}"
+        params[:query].each do |key, val|
+          unless val
+            path << "?#{key}"
             break
           end
         end
