@@ -7,33 +7,6 @@ class RAWS::S3::Adapter
       :query  => {}
     }
 
-    class Response
-      attr_reader :code
-      attr_reader :header
-      attr_reader :body
-
-      def initialize(response)
-        @code = response.code
-        headers = response.headers.split("\r\n")
-        headers.delete_at(0)
-        @header = Hash[
-          *headers.map do |val|
-            md = /(.+?):\s*(.*)/.match(val)
-            [md[1].downcase, md[2]]
-          end.flatten
-        ]
-        @body = response.body
-      end
-    end
-
-    class Redirect < StandardError
-      attr_reader :response
-
-      def initialize(response)
-        @response = Response.new(response)
-      end
-    end
-
     def sign(http_verb, header, path)
       "#{RAWS.aws_access_key_id}:#{
         [
@@ -59,70 +32,50 @@ class RAWS::S3::Adapter
       }"
     end
 
-    def fetch(http_verb, params, header={}, content=nil)
-      request = URI_PARAMS.merge(params[:request] || {})
+    def fetch(http_verb, params={}, header={}, content=nil, parser={})
+      params = URI_PARAMS.merge(params)
 
-      request[:path] += '?' << request[:query].map do |key, val|
+      params[:path] += '?' << params[:query].map do |key, val|
         val ? "#{RAWS.escape(key)}=#{RAWS.escape(val)}" : RAWS.escape(key)
-      end.sort.join(';') unless request[:query].empty?
+      end.sort.join(';') unless params[:query].empty?
 
       header['date'] = Time.now.httpdate
       header['authorization'] = 'AWS ' << sign(
         http_verb,
         header,
-        if bucket = request[:bucket]
+        if bucket = params[:bucket]
           if bucket.include?('.')
-            request.delete(:bucket)
-            request[:path] = "/#{bucket}#{request[:path]}"
+            params.delete(:bucket)
+            params[:path] = "/#{bucket}#{params[:path]}"
           else
-            "/#{bucket}#{request[:path]}"
+            "/#{bucket}#{params[:path]}"
           end
         else
-           request[:path]
+           params[:path]
         end
       )
 
-      if request[:bucket]
-        request[:host] = "#{request[:bucket]}.#{request[:host]}"
-      end
+      params[:host] = "#{params[:bucket]}.#{params[:host]}" if params[:bucket]
 
-      uri = "#{request[:scheme]}://#{request[:host]}#{request[:path]}"
-
-      begin
-        r = RAWS.__send__(
-          http_verb.downcase.to_sym,
-          uri,
-          {
-            :headers => header,
-            :body    => content
-          }
-        )
-
-        if 200 <= r.code && r.code <= 299
-          if params[:noparse]
-            Response.new(r)
-          else
-            RAWS.parse(Nokogiri::XML.parse(r.body), params[:parser] || {})
-          end
-        elsif 300 <= r.code && r.code <= 399
-          raise Redirect.new(r)
-        else
-          raise RAWS::Error.new(r, RAWS.parse(Nokogiri::XML.parse(r.body)))
-        end
-      rescue Redirect => e
-        uri = e.response.header['location']
-        retry
-      end
+      RAWS.http.fetch(
+        http_verb,
+        "#{params[:scheme]}://#{params[:host]}#{params[:path]}",
+        header,
+        content,
+        parser
+      )
     end
 
     def get_service
-      fetch('GET', :parser => {:multiple => ['Bucket']})
+      fetch('GET', {}, {}, nil, {:multiple => ['Bucket']})
     end
 
     def put_bucket(bucket_name, location=nil, header={})
       fetch(
         'PUT',
-        {:request => {:bucket => bucket_name}},
+        {
+          :bucket => bucket_name
+        },
         header,
         if location
           "<CreateBucketConfiguration><LocationConstraint>#{
@@ -137,7 +90,7 @@ class RAWS::S3::Adapter
     def put_request_payment(bucket_name)
       fetch(
         'PUT',
-        :request => {
+        {
           :bucket => bucket_name,
           :query  => {'requestPayment' => nil}
         }
@@ -147,11 +100,13 @@ class RAWS::S3::Adapter
     def get_bucket(bucket_name, params={})
       fetch(
         'GET',
-        :request => {
+        {
           :bucket => bucket_name,
           :query  => params
         },
-        :parser => {
+        {},
+        nil,
+        {
           :multiple => ['Contents']
         }
       )
@@ -160,7 +115,7 @@ class RAWS::S3::Adapter
     def get_request_payment(bucket_name)
       fetch(
         'GET',
-        :request => {
+        {
           :bucket => bucket_name,
           :query  => {'requestPayment' => nil}
         }
@@ -170,7 +125,7 @@ class RAWS::S3::Adapter
     def get_bucket_location(bucket_name)
       fetch(
         'GET',
-        :request => {
+        {
           :bucket => bucket_name,
           :query  => {'location' => nil}
         }
@@ -178,17 +133,15 @@ class RAWS::S3::Adapter
     end
 
     def delete_bucket(bucket_name)
-      fetch('DELETE', :request => {:bucket => bucket_name})
+      fetch('DELETE', {:bucket => bucket_name})
     end
 
     def put_object(bucket_name, name, object, header={})
       fetch(
         'PUT',
         {
-          :request => {
-            :bucket => bucket_name,
-            :path   => '/' << name
-          }
+          :bucket => bucket_name,
+          :path   => '/' << name
         },
         header,
         object
@@ -199,10 +152,8 @@ class RAWS::S3::Adapter
       fetch(
         'PUT',
         {
-          :request => {
-            :bucket => dest_bucket,
-            :path   => '/' << dest_name
-          }
+          :bucket => dest_bucket,
+          :path   => '/' << dest_name
         },
         header.merge('x-amz-copy-source' => "/#{src_bucket}/#{src_name}")
       )
@@ -211,29 +162,33 @@ class RAWS::S3::Adapter
     def get_object(bucket_name, name)
       fetch(
         'GET',
-        :request => {
+        {
           :bucket => bucket_name,
           :path   => '/' << name
         },
-        :noparse => true
+        {},
+        nil,
+        nil
       )
     end
 
     def head_object(bucket_name, name)
       fetch(
         'HEAD',
-        :request => {
+        {
           :bucket => bucket_name,
           :path   => '/' << name
         },
-        :noparse => true
+        {},
+        nil,
+        nil
       )
     end
 
     def delete_object(bucket_name, name)
       fetch(
         'DELETE',
-        :request => {
+        {
           :bucket => bucket_name,
           :path   => '/' << name
         }
@@ -243,12 +198,14 @@ class RAWS::S3::Adapter
     def get_acl(bucket_name, name)
       fetch(
         'GET',
-        :request => {
+        {
           :bucket => bucket_name,
           :path   => '/' << name,
           :query  => 'acl'
         },
-        :parser => {
+        {},
+        nil,
+        {
           :multiple => ['Grant']
         }
       )

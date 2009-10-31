@@ -13,12 +13,14 @@ class RAWS::S3
     end
 
     def location(bucket_name)
-      location = Adapter.get_bucket_location(bucket_name)['LocationConstraint']
+      response = Adapter.get_bucket_location(bucket_name)
+      location = response.doc['LocationConstraint']
       location.empty? ? 'US' : location
     end
 
     def list
-      Adapter.get_service['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
+      response = Adapter.get_service
+      response.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
     end
 
     def each(&block)
@@ -34,7 +36,7 @@ class RAWS::S3
       Adapter.get_bucket(
         bucket_name,
         params
-      )['ListBucketResult']['Contents'] || []
+      ).doc['ListBucketResult']['Contents'] || []
     end
 
     def put(bucket_name, name, object, header={})
@@ -66,5 +68,25 @@ class RAWS::S3
 
   def initialize(bucket_name)
     @bucket_name = bucket_name
+  end
+
+  def create_bucket
+    self.class.create_bucket(@bucket_name)
+  end
+
+  def delete_bucket
+    self.class.delete_bucket(@bucket_name)
+  end
+
+  def location
+    self.class.location(@bucket_name)
+  end
+
+  def filter(params={})
+    self.class.filter(@bucket_name, params)
+  end
+
+  def <=>(a)
+    bucket_name <=> a.bucket_name
   end
 end
