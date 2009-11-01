@@ -13,6 +13,10 @@ module RAWS
       URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
     end
 
+    def unescape(val)
+      URI.unescape(val.to_s)
+    end
+
     def sign(http_verb, base_uri, params)
       path = {
         'AWSAccessKeyId'   => aws_access_key_id,
