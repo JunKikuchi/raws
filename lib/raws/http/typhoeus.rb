@@ -1,5 +1,61 @@
 require 'typhoeus'
 
+# Add head method.
+module Typhoeus
+  class Easy
+    OPTION_VALUES[:CURLOPT_NOBODY] = 44
+
+    def method=(method)
+      @method = method
+      if method == :get
+        set_option(OPTION_VALUES[:CURLOPT_HTTPGET], 1)
+      elsif method == :post
+        set_option(OPTION_VALUES[:CURLOPT_HTTPPOST], 1)
+        self.post_data = ""
+      elsif method == :put
+        set_option(OPTION_VALUES[:CURLOPT_UPLOAD], 1)
+        self.request_body = "" unless @request_body
+      elsif method == :head
+        set_option(OPTION_VALUES[:CURLOPT_NOBODY], 1)
+      else
+        set_option(OPTION_VALUES[:CURLOPT_CUSTOMREQUEST], "DELETE")
+      end
+    end
+=begin
+    def set_headers
+      headers.each_pair do |key, value|
+        if value.is_a? Array
+          value.each do |v|
+            easy_add_header("#{key}: #{v}")
+          end
+        else
+          easy_add_header("#{key}: #{value}")
+        end
+      end
+      easy_set_headers() unless headers.empty?
+    end
+=end
+  end
+
+  module ClassMethods
+    [:get, :post, :put, :delete, :head].each do |method|
+      line = __LINE__ + 2  # get any errors on the correct line num
+      code = <<-SRC
+        def #{method.to_s}(url, options = {})
+          mock_object = get_mock(:#{method.to_s}, url, options)
+          unless mock_object.nil?
+            decode_nil_response(mock_object)
+          else
+            enforce_allow_net_connect!(:#{method.to_s}, url, options[:params])
+            remote_proxy_object(url, :#{method.to_s}, options)
+          end
+        end
+      SRC
+      module_eval(code, "./lib/typhoeus/remote.rb", line)
+    end
+  end
+end
+
 module RAWS
   module HTTP
     class Typhoeus
