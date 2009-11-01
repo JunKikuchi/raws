@@ -1,5 +1,6 @@
 class RAWS::S3
   autoload :Adapter, 'raws/s3/adapter'
+  autoload :Object, 'raws/s3/object'
 
   class << self
     include Enumerable
@@ -8,20 +9,24 @@ class RAWS::S3
       Adapter.put_bucket(bucket_name, location)
     end
 
-    def delete_bucket(bucket_name)
+    def delete_bucket(bucket_name, param=nil)
+      filter(bucket_name).each do |object|
+        delete(bucket_name, object['Key'])
+      end if param == :force
+
       Adapter.delete_bucket(bucket_name)
     end
 
     def location(bucket_name)
-      response = Adapter.get_bucket_location(bucket_name)
-      location = response.doc['LocationConstraint']
-      location.empty? ? 'US' : location
+      r = Adapter.get_bucket_location(bucket_name)
+      l = r.doc['LocationConstraint']
+      l.empty? ? 'US' : l
     end
 
     def list
       begin
-        response = Adapter.get_service
-        response.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
+        r = Adapter.get_service
+        r.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
       end.map do |val|
         self.new(val['Name'], val['CreationDate'])
       end
@@ -37,10 +42,12 @@ class RAWS::S3
     end
 
     def filter(bucket_name, params={})
-      Adapter.get_bucket(
-        bucket_name,
-        params
-      ).doc['ListBucketResult']['Contents'] || []
+      begin
+        r = Adapter.get_bucket(bucket_name, params)
+        r.doc['ListBucketResult']['Contents'] || []
+      end.map do |val|
+        Object.new(self[bucket_name], val['Key'])
+      end
     end
 
     def put(bucket_name, name, object, header={})
@@ -68,6 +75,7 @@ class RAWS::S3
       Adapter.delete_object(bucket_name, name)
     end
 
+=begin
     def acl(bucket_name, name=nil)
       get(
         bucket_name,
@@ -76,6 +84,7 @@ class RAWS::S3
         :parser => {:multiple => ['Grant']}
       ).doc
     end
+=end
   end
 
   attr_reader :bucket_name, :creation_date
@@ -89,8 +98,8 @@ class RAWS::S3
     self.class.create_bucket(@bucket_name, location)
   end
 
-  def delete_bucket
-    self.class.delete_bucket(@bucket_name)
+  def delete_bucket(param=nil)
+    self.class.delete_bucket(@bucket_name, param)
   end
 
   def location
@@ -101,8 +110,8 @@ class RAWS::S3
     self.class.filter(@bucket_name, params)
   end
 
-  def put(name, object, attrs={})
-    self.class.put(@bucket_name, name, object, attrs)
+  def put(name, object, header={})
+    self.class.put(@bucket_name, name, object, header)
   end
 
   def copy(name, dest_bucket, dest_name=nil)
@@ -113,13 +122,19 @@ class RAWS::S3
     self.class.get(@bucket_name, name, params)
   end
 
+  def head(name)
+    self.class.head(@bucket_name, name)
+  end
+
   def delete(name)
     self.class.delete(@bucket_name, name)
   end
 
+=begin
   def acl(name=nil)
     self.class.acl(@bucket_name, name)
   end
+=end
 
   def <=>(a)
     bucket_name <=> a.bucket_name
