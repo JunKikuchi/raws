@@ -113,4 +113,4 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
 
   RAWS::S3.create_bucket('test_bucket')
   
-  RAWS::S3.delete_bucket('test_bucket')
+  RAWS::S3['test_bucket'].delete_bucket
