@@ -18,10 +18,10 @@ class RAWS::S3::Adapter
                 http_verb,
                 header['content-md5'],
                 header['content-type'],
-                header['date']
+                header['x-amz-date'] ? '' : header['date'],
               ] + header.select do |key, val|
                 /^x-amz-/.match(key)
-              end.map do |key,val|
+              end.sort.map do |key, val|
                 "#{key}:#{val}"
               end + [
                 path
@@ -85,9 +85,11 @@ class RAWS::S3::Adapter
         },
         header,
         if location
-          "<CreateBucketConfiguration><LocationConstraint>#{
-            location
-          }</LocationConstraint></CreateBucketConfiguration>"
+          "<CreateBucketConfiguration>"
+            "<LocationConstraint>#{
+              location
+            }</LocationConstraint>"
+          "</CreateBucketConfiguration>"
         else
           nil
         end
