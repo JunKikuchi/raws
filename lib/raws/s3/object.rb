@@ -1,6 +1,8 @@
 class RAWS::S3::Object
   attr_reader :bucket, :name
 
+  alias :key :name
+
   def initialize(bucket, name)
     @bucket, @name = bucket, name
   end
@@ -15,6 +17,10 @@ class RAWS::S3::Object
 
   def content
     @content ||= @bucket.get(@name).body
+  end
+
+  def content=(val)
+    @content = val
   end
 
   def save
@@ -34,14 +40,6 @@ class RAWS::S3::Object
       decode(@object.header)
     end
 
-    def [](key)
-      super(X_AMZ_META + key)
-    end
-
-    def []=(key, val)
-      super(X_AMZ_META + key, val)
-    end
-
     def decode(header)
       header.select do |key, val|
         key.match(/^#{X_AMZ_META}/)
@@ -57,13 +55,16 @@ class RAWS::S3::Object
 
     def encode
       self.inject({}) do |ret, (key, val)|
+        key = X_AMZ_META + key
+
         if val.is_a? Array
-          ret[key] = val.map do |v|
+          ret[ key] = val.map do |v|
             RAWS.escape(v.strip)
           end.join(',')
         else
           ret[key] = RAWS.escape(val.strip)
         end
+
         ret
       end
     end

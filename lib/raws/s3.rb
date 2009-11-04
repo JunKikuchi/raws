@@ -49,6 +49,7 @@ class RAWS::S3
         Object.new(self[bucket_name], val['Key'])
       end
     end
+    alias :all :filter
 
     def put(bucket_name, name, object, header={})
       Adapter.put_object(bucket_name, name, object, header)
@@ -88,6 +89,7 @@ class RAWS::S3
   end
 
   attr_reader :bucket_name, :creation_date
+  alias :name :bucket_name
 
   def initialize(bucket_name, creation_date=nil)
     @bucket_name = bucket_name
@@ -109,6 +111,7 @@ class RAWS::S3
   def filter(params={})
     self.class.filter(@bucket_name, params)
   end
+  alias :all :filter
 
   def put(name, object, header={})
     self.class.put(@bucket_name, name, object, header)
