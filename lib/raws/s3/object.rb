@@ -58,7 +58,7 @@ class RAWS::S3::Object
         key = X_AMZ_META + key
 
         if val.is_a? Array
-          ret[ key] = val.map do |v|
+          ret[key] = val.map do |v|
             RAWS.escape(v.strip)
           end.join(',')
         else
