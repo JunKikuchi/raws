@@ -23,14 +23,20 @@ class RAWS::S3
       l.empty? ? 'US' : l
     end
 
+    def owner
+      @owner ||= Adapter.get_service.doc['ListAllMyBucketsResult']['Owner']
+    end
+
     def list
       begin
-        r = Adapter.get_service
-        r.doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
+        r = Adapter.get_service.doc['ListAllMyBucketsResult']
+        @owner ||= r['Owner']
+        r['Buckets']['Bucket'] || []
       end.map do |val|
         self.new(val['Name'], val['CreationDate'])
       end
     end
+    alias :buckets :list
 
     def each(&block)
       list.each(&block)
