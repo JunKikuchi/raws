@@ -91,7 +91,7 @@ module RAWS
         end
       end
 
-      class Response
+      class Response < ::RAWS::HTTP::Response
         attr_reader :code
         attr_reader :body
 

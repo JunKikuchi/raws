@@ -1,34 +1,14 @@
 class RAWS::S3::Object
-  attr_reader :bucket, :name
-
-  alias :key :name
-
-  def initialize(bucket, name)
-    @bucket, @name = bucket, name
-  end
-
   def header
-    @header ||= @bucket.head(@name).header
   end
 
   def metadata
-    @metadata ||= Metadata.new(self)
   end
 
-  def content
-    @content ||= @bucket.get(@name).body
+  def read(length=nil)
   end
 
-  def content=(val)
-    @content = val
-  end
-
-  def save
-    @bucket.put(@name, content, metadata.encode)
-  end
-
-  def delete
-    @bucket.delete(@name)
+  def write(val)
   end
 
   class Metadata < Hash

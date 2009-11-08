@@ -1,141 +1,68 @@
-require 'spec/spec_config'
+require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
-#RAWS.logger.level = Logger::DEBUG
+describe RAWS::S3 do
+  RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
+    location_label = location ? location : 'US'
 
-describe RAWS::S3::Adapter do
-  before :all do
-=begin
-    RAWS_S3_BUCKETS.each do |name, location|
-      d RAWS::S3.create_bucket(name, location)
+    before(:all) do
+#      RAWS::S3.create_bucket bucket_name, location
+#      RAWS::S3.put bucket_name, 'aaa', 'AAA'
+#      RAWS::S3.put bucket_name, 'bbb', 'BBB'
+#      RAWS::S3.put bucket_name, 'ccc', 'CCC'
     end
-    RAWS_S3_BUCKETS.each do |name, location|
-      RAWS::S3.put(name, 'a', 'A')
-      RAWS::S3.put(name, 'a/a', 'A-A')
-      RAWS::S3.put(name, 'a/a/a', 'A-A-A')
-      RAWS::S3.put(name, 'b', 'B')
-      RAWS::S3.put(name, 'c', 'C')
-    end
-=end
-  end
 
-  after :all do
-=begin
-    RAWS_S3_BUCKETS.each do |name, location|
-      RAWS::S3[name].delete_bucket
+    after(:all) do
+#      RAWS::S3.delete_bucket bucket_name, :force
     end
-=end
-  end
 
-  describe 'class' do
-    it 'methods' do
-      %w'
-        create_bucket
-        delete_bucket
-        location
-        list
-        each
-        []
-        filter
-        put
-        copy
-        get
-        head
-        delete
-        acl
-      '.each do |val|
-        RAWS::S3.should respond_to val.to_sym
+    it "owner should return a owner information of the bucket" do
+      RAWS::S3.owner.should be_instance_of(Hash)
+      RAWS::S3.owner['DisplayName'].should be_instance_of(String)
+      RAWS::S3.owner['ID'].should be_instance_of(String)
+    end
+
+    it "buckets should return an array of RAWS::S3" do
+     RAWS::S3.buckets.should be_instance_of(Array)
+     RAWS::S3.buckets.each do |bucket|
+       bucket.should be_instance_of(RAWS::S3)
+     end
+     RAWS::S3.buckets.should include(RAWS::S3[bucket_name])
+    end
+
+    it "self['#{bucket_name}'] should be instance of RAWS::S3" do
+      RAWS::S3[bucket_name].should be_instance_of(RAWS::S3)
+      RAWS::S3[bucket_name].bucket_name.should == bucket_name
+      RAWS::S3[bucket_name].name.should == bucket_name
+    end
+
+    it "location('#{bucket_name}') should return location of the bucket" do
+      RAWS::S3.location(bucket_name).should == location_label
+    end
+
+    it "filter('#{bucket_name}') should return an array of RAWS::S3::Object" do
+      RAWS::S3.filter(bucket_name).should be_instance_of(Array)
+      RAWS::S3.filter(bucket_name).each do |object|
+        object.should be_instance_of(Hash)
       end
     end
 
-    it 'create_bucket' do
-    end
+    it 'put, get and delete method should put, get and delete the object' do
+      RAWS::S3.put(bucket_name, 'a', 'A')
 
-    it 'delete_bucket' do
-    end
+      response = RAWS::S3.get(bucket_name, 'a')
+      response.should be_kind_of RAWS::HTTP::Response
 
-    it 'location' do
+      RAWS::S3.delete(bucket_name, 'a')
+
       begin
-        RAWS_S3_BUCKETS.each do |name, location|
-          RAWS::S3.location(name).should == (location || 'US')
-        end
+        response = RAWS::S3.get(bucket_name, 'a')
+        response.should be_nil
       rescue => e
-        d e.response.code
-        d e.response.header
-        d e.response.doc
+        d e
       end
     end
 
-    it 'list' do
-      buckets = RAWS_S3_BUCKETS.map do |val|
-        val.first
-      end
-      RAWS::S3.list.each do |val|
-        buckets.should include(val['Name'])
-      end
-    end
-
-    it 'each' do
-      buckets = RAWS_S3_BUCKETS.map do |val|
-        val.first
-      end
-      RAWS::S3.each do |val|
-        buckets.should include(val['Name'])
-      end
-    end
-
-    it '[]' do
-      RAWS_S3_BUCKETS.each do |name, location|
-        RAWS::S3[name].should be_kind_of(RAWS::S3)
-        RAWS::S3[name].bucket_name.should == name
-      end
-    end
-
-    it 'filter' do
-      begin
-        RAWS_S3_BUCKETS.each do |name, location|
-          RAWS::S3.filter(name, 'prefix' => 'a/a/a')[0]['Key'].should == 'a/a/a'
-        end
-      rescue => e
-        d e.response.code
-        d e.response.header
-        d e.response.doc
-      end
-    end
-
-    it 'put' do
-    end
-
-    it 'copy' do
-    end
-
-    it 'get' do
-    end
-
-    it 'head' do
-    end
-
-    it 'delete' do
-    end
-
-    it 'acl' do
-    end
-  end
-
-  describe 'object' do
-    before do
-      @s3 = RAWS::S3[RAWS_S3_BUCKETS[0]]
-    end
-
-    it 'method' do
-      %w'
-        create_bucket
-        delete_bucket
-        location
-        filter
-        <=>
-      '.each do |val|
-        @s3.should respond_to val.to_sym
-      end
-    end
+    it "copy(src_bucket, src_name, dest_bucket, dest_name) should copy the object"
+    it "head('#{bucket_name}', name) should head the object"
   end
 end
