@@ -5,6 +5,11 @@ require 'spec'
 require 'spec/autorun'
 require 'spec/spec_config'
 
+require 'yaml'
+def d(val)
+  puts val.to_yaml
+end
+
 Spec::Runner.configure do |config|
   
 end

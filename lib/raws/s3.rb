@@ -10,8 +10,8 @@ class RAWS::S3
     end
 
     def delete_bucket(bucket_name, force=nil)
-      filter(bucket_name).each do |object|
-        delete(bucket_name, object.key)
+      filter(bucket_name).each do |val|
+        delete(bucket_name, val['Key'])
       end if force == :force
 
       Adapter.delete_bucket(bucket_name)
