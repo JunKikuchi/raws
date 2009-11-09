@@ -1,14 +1,33 @@
-class RAWS::S3::Object
-  def header
+module RAWS::S3::Model
+  module ClassMethods
+    attr_accessor :bucket_name
+
+    def create_bucket
+      RAWS::S3[bucket_name].create_bucket
+    end
+
+    def delete_bucket
+      RAWS::S3[bucket_name].delete_bucket
+    end
   end
 
-  def metadata
+  module InstanceMethods
+    def after_initialize; end
+    def before_delete; end
+    def after_delete; end
+    def before_save; end
+    def after_save; end
+    def before_update; end
+    def after_update; end
+    def before_insert; end
+    def after_insert; end
   end
 
-  def read(length=nil)
-  end
-
-  def write(val)
+  def self.included(mod)
+    mod.class_eval do
+      include InstanceMethods
+      extend ClassMethods
+    end
   end
 
   class Metadata < Hash

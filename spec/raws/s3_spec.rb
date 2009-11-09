@@ -1,19 +1,24 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
-describe RAWS::S3 do
-  RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
-    location_label = location ? location : 'US'
+RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
+  location_label = location ? location : 'US'
 
+  describe RAWS::S3 do
     describe 'class' do
       before(:all) do
-        #RAWS::S3.create_bucket(bucket_name, location)
+        response = RAWS::S3.create_bucket(bucket_name, location)
+        response.should be_kind_of(RAWS::HTTP::Response)
+
         RAWS::S3.put(bucket_name, 'aaa', 'AAA')
         RAWS::S3.put(bucket_name, 'bbb', 'BBB')
         RAWS::S3.put(bucket_name, 'ccc', 'CCC')
       end
 
       after(:all) do
-        #RAWS::S3.delete_bucket(bucket_name, :force)
+        response = RAWS::S3.delete_bucket(bucket_name, :force)
+        response.should be_kind_of(RAWS::HTTP::Response)
+
+        sleep 60
       end
 
       it "owner should return a owner information of the bucket" do
@@ -40,7 +45,7 @@ describe RAWS::S3 do
         RAWS::S3.location(bucket_name).should == location_label
       end
 
-      it "filter('#{bucket_name}') should return an array of RAWS::S3::Object" do
+      it "filter('#{bucket_name}') should return an array of RAWS::HTTP::Response" do
         RAWS::S3.filter(bucket_name).should be_instance_of(Array)
         RAWS::S3.filter(bucket_name).each do |object|
           object.should be_instance_of(Hash)
@@ -84,21 +89,25 @@ describe RAWS::S3 do
     describe 'object' do
       before(:all) do
         @bucket = RAWS::S3[bucket_name]
-        #@bucket.create_bucket
+        @bucket.create_bucket.should be_kind_of(RAWS::HTTP::Response)
+
         @bucket.put('aaa', 'AAA')
         @bucket.put('bbb', 'BBB')
         @bucket.put('ccc', 'CCC')
       end
 
       after(:all) do
-        #@bucket.delete_bucket(:force)
+        response = @bucket.delete_bucket(:force)
+        response.should be_kind_of(RAWS::HTTP::Response)
+
+        sleep 60
       end
 
       it "location should return location of the bucket" do
         @bucket.location.should == location_label
       end
 
-      it "filter should return an array of RAWS::S3::Object" do
+      it "filter should return an array of RAWS::HTTP::Response" do
         @bucket.filter.should be_instance_of(Array)
         @bucket.filter.each do |object|
           object.should be_instance_of(Hash)
@@ -130,6 +139,30 @@ describe RAWS::S3 do
       it "head method should return header information of the object" do
         @bucket.head('aaa').should be_kind_of(RAWS::HTTP::Response)
       end
+    end
+  end
+
+  describe RAWS::S3::S3Object do
+    class S3 < RAWS::S3::S3Object
+      self.bucket_name = bucket_name
+    end
+
+    describe 'class' do
+      before(:all) do
+        S3.create_bucket
+      end
+
+      after(:all) do
+        S3.delete_bucket
+        sleep 60
+      end
+
+      it "location should return location of the bucket"
+      it "filter should return an array of RAWS::S3::Object"
+      it "create method should put the object"
+    end
+
+    describe 'object' do
     end
   end
 end

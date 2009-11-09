@@ -1,12 +1,11 @@
 class RAWS::S3
+  autoload :S3Object, 'raws/s3/s3object'
   autoload :Adapter, 'raws/s3/adapter'
-  autoload :Object, 'raws/s3/object'
+  autoload :Model, 'raws/s3/model'
 
   class << self
     def create_bucket(bucket_name, location=nil, header={})
       Adapter.put_bucket(bucket_name, location, header)
-
-      self[bucket_name]
     end
 
     def delete_bucket(bucket_name, force=nil)
@@ -15,8 +14,6 @@ class RAWS::S3
       end if force == :force
 
       Adapter.delete_bucket(bucket_name)
-
-      nil
     end
 
     def owner
@@ -25,9 +22,9 @@ class RAWS::S3
 
     def buckets
       begin
-        r = Adapter.get_service.doc['ListAllMyBucketsResult']
-        @owner ||= r['Owner']
-        r['Buckets']['Bucket'] || []
+        response = Adapter.get_service.doc['ListAllMyBucketsResult']
+        @owner ||= response['Owner']
+        response['Buckets']['Bucket'] || []
       end.map do |val|
         self[val['Name']]
       end
@@ -46,8 +43,8 @@ class RAWS::S3
 
     def filter(bucket_name, params={})
       begin
-        r = Adapter.get_bucket(bucket_name, params)
-        r.doc['ListBucketResult']['Contents'] || []
+        response = Adapter.get_bucket(bucket_name, params)
+        response.doc['ListBucketResult']['Contents'] || []
       end.map do |val|
         val
       end
