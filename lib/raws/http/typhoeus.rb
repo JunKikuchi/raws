@@ -21,20 +21,6 @@ module Typhoeus
         set_option(OPTION_VALUES[:CURLOPT_CUSTOMREQUEST], "DELETE")
       end
     end
-=begin
-    def set_headers
-      headers.each_pair do |key, value|
-        if value.is_a? Array
-          value.each do |v|
-            easy_add_header("#{key}: #{v}")
-          end
-        else
-          easy_add_header("#{key}: #{value}")
-        end
-      end
-      easy_set_headers() unless headers.empty?
-    end
-=end
   end
 
   module ClassMethods
@@ -59,13 +45,11 @@ end
 module RAWS
   module HTTP
     class Typhoeus
-      include ::Typhoeus
-
       def fetch(http_verb, uri, header={}, body=nil, parser=nil)
         RAWS.logger.debug([http_verb, uri, header, body, parser])
 
         begin
-          response = self.class.__send__(
+          response = ::Typhoeus::Request.__send__(
             http_verb.downcase.to_sym,
             uri,
             {
