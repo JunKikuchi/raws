@@ -63,7 +63,7 @@ module RAWS::SDB::Model
       sdb_writer(*names)
     end
   end
-  
+
   module InstanceMethods
     attr_reader :id, :values
 
