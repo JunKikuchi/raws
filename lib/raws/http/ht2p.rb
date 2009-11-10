@@ -49,7 +49,7 @@ class RAWS::HTTP::HT2P
       @header   = response.header
       @body     = ''
       response.receive do |io|
-        @body = response.read
+        @body = io.read
       end
     end
 
