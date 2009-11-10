@@ -42,63 +42,59 @@ module Typhoeus
   end
 end
 
-module RAWS
-  module HTTP
-    class Typhoeus
-      def fetch(http_verb, uri, header={}, body=nil, parser=nil)
-        RAWS.logger.debug([http_verb, uri, header, body, parser])
+class RAWS::HTTP::Typhoeus
+  def fetch(http_verb, uri, header={}, body=nil, parser=nil)
+    RAWS.logger.debug([http_verb, uri, header, body, parser])
 
-        begin
-          response = ::Typhoeus::Request.__send__(
-            http_verb.downcase.to_sym,
-            uri,
-            {
-              :headers => header,
-              :body    => body
-            }
-          )
+    begin
+      response = ::Typhoeus::Request.__send__(
+        http_verb.downcase.to_sym,
+        uri,
+        {
+          :headers => header,
+          :body    => body
+        }
+      )
 
-          RAWS.logger.debug(response)
+      RAWS.logger.debug(response)
 
-          case response.code
-          when 200...300
-            Response.new(response, parser)
-          when 300...400
-            raise Redirect.new(Response.new(response))
-          else
-            raise Error.new(Response.new(response))
-          end
-        rescue Redirect => e
-          r = e.response
-          uri = r.header['location'] || r.doc['Error']['Endpoint']
-          retry
-        end
+      case response.code
+      when 200...300
+        Response.new(response, parser)
+      when 300...400
+        raise Redirect.new(Response.new(response))
+      else
+        raise Error.new(Response.new(response))
       end
+    rescue Redirect => e
+      r = e.response
+      uri = r.header['location'] || r.doc['Error']['Endpoint']
+      retry
+    end
+  end
 
-      class Response < ::RAWS::HTTP::Response
-        attr_reader :code
-        attr_reader :body
+  class Response < ::RAWS::HTTP::Response
+    attr_reader :code
+    attr_reader :body
 
-        def initialize(response, params={})
-          @response = response
-          @params   = params
-          @code     = response.code
-          @body     = response.body
+    def initialize(response, params={})
+      @response = response
+      @params   = params
+      @code     = response.code
+      @body     = response.body
+    end
+
+    def header
+      @header ||= @response.headers.split("\r\n").inject({}) do |ret, val|
+        if md = /(.+?):\s*(.*)/.match(val)
+          ret[md[1].downcase] = md[2]
         end
-
-        def header
-          @header ||= @response.headers.split("\r\n").inject({}) do |ret, val|
-            if md = /(.+?):\s*(.*)/.match(val)
-              ret[md[1].downcase] = md[2]
-            end
-            ret
-          end
-        end
-
-        def doc
-          @doc ||= RAWS.xml.parse(@body, @params) if @params
-        end
+        ret
       end
+    end
+
+    def doc
+      @doc ||= RAWS.xml.parse(@body, @params) if @params
     end
   end
 end
