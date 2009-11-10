@@ -64,13 +64,19 @@ class RAWS::S3::Adapter
 
       params[:host] = "#{params[:bucket]}.#{params[:host]}" if params[:bucket]
 
+      response = nil
+
       RAWS.http.fetch(
         http_verb,
         "#{params[:scheme]}://#{params[:host]}#{params[:path]}",
         header,
         content,
         parser
-      )
+      ) do |_response|
+        response = _response
+      end
+
+      response
     end
 
     def get_service

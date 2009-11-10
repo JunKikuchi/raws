@@ -3,11 +3,11 @@ module RAWS::S3::Model
     attr_accessor :bucket_name
 
     def create_bucket
-      RAWS::S3[bucket_name].create_bucket
+      RAWS::S3.create_bucket(self.bucket_name)
     end
 
-    def delete_bucket
-      RAWS::S3[bucket_name].delete_bucket
+    def delete_bucket(force=nil)
+      RAWS::S3.delete_bucket(self.bucket_name, force)
     end
   end
 

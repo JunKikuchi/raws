@@ -8,6 +8,8 @@ module RAWS
   class << self
     attr_accessor :aws_access_key_id
     attr_accessor :aws_secret_access_key
+    attr_accessor :http
+    attr_accessor :xml
 
     def escape(val)
       URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
@@ -40,21 +42,19 @@ module RAWS
     end
 
     def fetch(http_verb, base_uri, params, options={})
+      doc = nil
+
       http.fetch(
         http_verb,
         "#{base_uri}?#{sign(http_verb, base_uri, params)}",
         {},
         nil,
         options
-      ).doc
-    end
+      ) do |response|
+        doc = response.doc
+      end
 
-    def http
-      @http ||= HTTP::Typhoeus.new
-    end
-
-    def xml
-      @xml ||= XML::Nokogiri.new
+      doc
     end
 
     def logger
@@ -78,3 +78,6 @@ module RAWS
   autoload :SQS,  'raws/sqs'
   autoload :S3,   'raws/s3'
 end
+
+RAWS.http = RAWS::HTTP::HT2P.new
+RAWS.xml = RAWS::XML::Nokogiri.new

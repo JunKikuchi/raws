@@ -19,5 +19,6 @@ module RAWS
     class Response; end
 
     autoload :Typhoeus, 'raws/http/typhoeus'
+    autoload :HT2P, 'raws/http/ht2p'
   end
 end

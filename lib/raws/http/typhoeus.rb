@@ -43,7 +43,7 @@ module Typhoeus
 end
 
 class RAWS::HTTP::Typhoeus
-  def fetch(http_verb, uri, header={}, body=nil, parser=nil)
+  def fetch(http_verb, uri, header={}, body=nil, parser=nil, &block)
     RAWS.logger.debug([http_verb, uri, header, body, parser])
 
     begin
@@ -60,7 +60,7 @@ class RAWS::HTTP::Typhoeus
 
       case response.code
       when 200...300
-        Response.new(response, parser)
+        block.call(Response.new(response, parser))
       when 300...400
         raise Redirect.new(Response.new(response))
       else
