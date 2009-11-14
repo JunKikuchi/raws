@@ -10,64 +10,64 @@ module RAWS
     attr_accessor :aws_secret_access_key
     attr_accessor :http
     attr_accessor :xml
+  end
 
-    def escape(val)
-      URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
+  def self.escape(val)
+    URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
+  end
+
+  def self.unescape(val)
+    URI.unescape(val.to_s)
+  end
+
+  def self.sign(http_verb, base_uri, params)
+    path = {
+      'AWSAccessKeyId'   => aws_access_key_id,
+      'SignatureMethod'  => 'HmacSHA256',
+      'SignatureVersion' => '2',
+      'Timestamp'        => Time.now.utc.iso8601
+    }.merge(params).map do |key, val|
+      "#{escape(key)}=#{escape(val)}"
+    end.sort.join('&')
+
+    uri = URI.parse(base_uri)
+    "#{path}&Signature=" << escape(
+      [
+        ::OpenSSL::HMAC.digest(
+          ::OpenSSL::Digest::SHA256.new,
+          aws_secret_access_key,
+          "#{http_verb.upcase}\n#{uri.host.downcase}\n#{uri.path}\n#{path}"
+        )
+      ].pack('m').strip
+    )
+  end
+
+  def self.fetch(http_verb, base_uri, params, options={})
+    doc = nil
+
+    http.fetch(
+      http_verb,
+      "#{base_uri}?#{sign(http_verb, base_uri, params)}",
+      {},
+      nil,
+      options
+    ) do |response|
+      doc = response.doc
     end
 
-    def unescape(val)
-      URI.unescape(val.to_s)
-    end
+    doc
+  end
 
-    def sign(http_verb, base_uri, params)
-      path = {
-        'AWSAccessKeyId'   => aws_access_key_id,
-        'SignatureMethod'  => 'HmacSHA256',
-        'SignatureVersion' => '2',
-        'Timestamp'        => Time.now.utc.iso8601
-      }.merge(params).map do |key, val|
-        "#{escape(key)}=#{escape(val)}"
-      end.sort.join('&')
-
-      uri = URI.parse(base_uri)
-      "#{path}&Signature=" << escape(
-        [
-          ::OpenSSL::HMAC.digest(
-            ::OpenSSL::Digest::SHA256.new,
-            aws_secret_access_key,
-            "#{http_verb.upcase}\n#{uri.host.downcase}\n#{uri.path}\n#{path}"
-          )
-        ].pack('m').strip
-      )
-    end
-
-    def fetch(http_verb, base_uri, params, options={})
-      doc = nil
-
-      http.fetch(
-        http_verb,
-        "#{base_uri}?#{sign(http_verb, base_uri, params)}",
-        {},
-        nil,
-        options
-      ) do |response|
-        doc = response.doc
+  def self.logger
+    @logger ||= begin
+      logger = Logger.new(STDERR)
+      logger.progname = self.name
+      logger.level = Logger::INFO
+      def logger.debug(val)
+        require 'yaml'
+        super(val.to_yaml)
       end
-
-      doc
-    end
-
-    def logger
-      @logger ||= begin
-        logger = Logger.new(STDERR)
-        logger.progname = self.name
-        logger.level = Logger::INFO
-        def logger.debug(val)
-          require 'yaml'
-          super(val.to_yaml)
-        end
-        logger
-      end
+      logger
     end
   end
 
