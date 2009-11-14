@@ -57,4 +57,7 @@ class RAWS::HTTP::HT2P
       @doc ||= RAWS.xml.parse(@body, @params) if @params
     end
   end
+
+  def self.connect(uri, &block)
+  end
 end

@@ -1,4 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe RAWS do
   describe 'class' do
@@ -19,25 +19,17 @@ describe RAWS do
   <?xml version="1.0"?>
   <GetQueueAttributesResponse xmlns="http://queue.amazonaws.com/doc/2009-02-01/"><GetQueueAttributesResult><Attribute><Name>VisibilityTimeout</Name><Value>60</Value></Attribute></GetQueueAttributesResult><ResponseMetadata><RequestId>6f950716-2579-4c55-92e8-ff0cdec28e6d</RequestId></ResponseMetadata></GetQueueAttributesResponse>
       END
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml)
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml)['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Hash)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
-        :multiple => ['Attribute']
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml, :multiple => ['Attribute'])['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Array)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
-        :unpack => ['Attribute']
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml, :unpack => ['Attribute'])['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Hash)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
+      data = RAWS.xml.parse(
+        xml,
         :multiple => ['Attribute'],
         :unpack => ['Attribute']
       )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
@@ -47,25 +39,17 @@ describe RAWS do
   <?xml version="1.0"?>
   <GetQueueAttributesResponse xmlns="http://queue.amazonaws.com/doc/2009-02-01/"><GetQueueAttributesResult><Attribute><Name>VisibilityTimeout</Name><Value>60</Value></Attribute><Attribute><Name>ApproximateNumberOfMessages</Name><Value>7</Value></Attribute><Attribute><Name>CreatedTimestamp</Name><Value>1248498270</Value></Attribute><Attribute><Name>LastModifiedTimestamp</Name><Value>1248501553</Value></Attribute></GetQueueAttributesResult><ResponseMetadata><RequestId>6f950716-2579-4c55-92e8-ff0cdec28e6d</RequestId></ResponseMetadata></GetQueueAttributesResponse>
       END
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml)
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml)['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Array)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
-        :multiple => ['Attribute']
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml, :multiple => ['Attribute'])['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Array)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
-        :unpack => ['Attribute']
-      )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
+      data = RAWS.xml.parse(xml, :unpack => ['Attribute'])['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
       data.should be_kind_of(Hash)
 
-      data = RAWS.parse(
-        Nokogiri::XML.parse(xml),
+      data = RAWS.xml.parse(
+        xml,
         :multiple => ['Attribute'],
         :unpack => ['Attribute']
       )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']

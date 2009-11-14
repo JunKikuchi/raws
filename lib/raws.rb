@@ -71,6 +71,10 @@ module RAWS
     end
   end
 
+  def self.connect(uri, &block)
+    http.connect uri, &block
+  end
+
   autoload :HTTP, 'raws/http'
   autoload :XML,  'raws/xml'
 
