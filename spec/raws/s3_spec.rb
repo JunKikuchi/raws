@@ -9,9 +9,29 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         response = RAWS::S3.create_bucket(bucket_name, location)
         response.should be_kind_of(RAWS::HTTP::Response)
 
-        RAWS::S3.put(bucket_name, 'aaa', 'AAA')
-        RAWS::S3.put(bucket_name, 'bbb', 'BBB')
-        RAWS::S3.put(bucket_name, 'ccc', 'CCC')
+        RAWS::S3.put(
+          bucket_name,
+          'aaa',
+          'content-length' => 3
+        ) do |io|
+          io.write 'AAA'
+        end
+
+        RAWS::S3.put(
+          bucket_name,
+          'bbb',
+          'content-length' => 3
+        ) do |io|
+          io.write 'BBB'
+        end
+
+        RAWS::S3.put(
+          bucket_name,
+          'ccc',
+          'content-length' => 3
+        ) do |io|
+          io.write 'CCC'
+        end
       end
 
       after(:all) do
@@ -57,10 +77,14 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it 'put, get and delete method should put, get and delete the object' do
-        response = RAWS::S3.put(bucket_name, 'a', 'A')
+        response = RAWS::S3.put(bucket_name, 'a', 'content-length' => 1) do |io|
+          io.write 'A'
+        end
         response.should be_kind_of(RAWS::HTTP::Response)
 
-        response = RAWS::S3.get(bucket_name, 'a')
+        response = RAWS::S3.get(bucket_name, 'a') do |io|
+          io.read
+        end
         response.should be_kind_of(RAWS::HTTP::Response)
 
         response = RAWS::S3.delete(bucket_name, 'a')
@@ -75,10 +99,17 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         response = RAWS::S3.copy(bucket_name, 'aaa', bucket_name, 'AAA')
         response.should be_kind_of(RAWS::HTTP::Response)
 
-        src  = RAWS::S3.get(bucket_name, 'aaa')
-        dest = RAWS::S3.get(bucket_name, 'AAA')
+        src = nil
+        RAWS::S3.get(bucket_name, 'aaa') do |io|
+          src = io.read
+        end
 
-        dest.body.should == src.body
+        dest = nil
+        RAWS::S3.get(bucket_name, 'AAA') do |io|
+          dest = io.read
+        end
+
+        dest.should == src
 
         response = RAWS::S3.delete(bucket_name, 'AAA')
         response.should be_kind_of(RAWS::HTTP::Response)
@@ -95,9 +126,9 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         @bucket = RAWS::S3[bucket_name]
         @bucket.create_bucket.should be_kind_of(RAWS::HTTP::Response)
 
-        @bucket.put('aaa', 'AAA')
-        @bucket.put('bbb', 'BBB')
-        @bucket.put('ccc', 'CCC')
+        @bucket.put('aaa', 'content-length' => 3) do |io| io.write 'AAA' end
+        @bucket.put('bbb', 'content-length' => 3) do |io| io.write 'BBB' end
+        @bucket.put('ccc', 'content-length' => 3) do |io| io.write 'CCC' end
       end
 
       after(:all) do
@@ -119,8 +150,14 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it 'put, get and delete method should put, get and delete the object' do
-        @bucket.put('a', 'A').should be_kind_of(RAWS::HTTP::Response)
-        @bucket.get('a').should be_kind_of(RAWS::HTTP::Response)
+        @bucket.put('a', 'content-length' => 1) do |io|
+          io.write 'A'
+        end.should be_kind_of(RAWS::HTTP::Response)
+
+        @bucket.get('a') do |io|
+          io.read
+        end.should be_kind_of(RAWS::HTTP::Response)
+
         @bucket.delete('a').should be_kind_of(RAWS::HTTP::Response)
 
         lambda do
@@ -132,10 +169,17 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         response = @bucket.copy('aaa', bucket_name, 'AAA')
         response.should be_kind_of(RAWS::HTTP::Response)
 
-        src  = @bucket.get('aaa')
-        dest = @bucket.get('AAA')
+        src = nil
+        @bucket.get('aaa') do |io|
+          src = io.read
+        end
 
-        dest.body.should == src.body
+        dest = nil
+        @bucket.get('AAA') do |io|
+          dest = io.read
+        end
+
+        dest.should == src
 
         @bucket.delete('AAA').should be_kind_of(RAWS::HTTP::Response)
       end
@@ -145,7 +189,7 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
     end
   end
-
+=begin
   describe RAWS::S3::S3Object do
     class S3 < RAWS::S3::S3Object
       self.bucket_name = bucket_name
@@ -169,4 +213,5 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
     describe 'object' do
     end
   end
+=end
 end

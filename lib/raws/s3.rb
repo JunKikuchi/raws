@@ -51,16 +51,16 @@ class RAWS::S3
     end
     alias :all :filter
 
-    def put(bucket_name, name, object, header={})
-      Adapter.put_object(bucket_name, name, object, header)
+    def put(bucket_name, name, header, &block)
+      Adapter.put_object(bucket_name, name, header, &block)
     end
 
     def copy(src_bucket, src_name, dest_bucket, dest_name, header={})
       Adapter.copy_object(src_bucket, src_name, dest_bucket, dest_name, header)
     end
 
-    def get(bucket_name, name, params={})
-      Adapter.get_object(bucket_name, name, params)
+    def get(bucket_name, name, params={}, &block)
+      Adapter.get_object(bucket_name, name, params, &block)
     end
 
     def head(bucket_name, name)
@@ -97,16 +97,16 @@ class RAWS::S3
   end
   alias :all :filter
 
-  def put(name, object, header={})
-    self.class.put(@bucket_name, name, object, header)
+  def put(name, header, &block)
+    self.class.put(@bucket_name, name, header, &block)
   end
 
   def copy(name, dest_bucket, dest_name)
     self.class.copy(@bucket_name, name, dest_bucket, dest_name)
   end
 
-  def get(name, params={})
-    self.class.get(@bucket_name, name, params)
+  def get(name, header={}, &block)
+    self.class.get(@bucket_name, name, header, &block)
   end
 
   def head(name)

@@ -71,10 +71,6 @@ module RAWS
     end
   end
 
-  def self.connect(uri, &block)
-    http.connect uri, &block
-  end
-
   autoload :HTTP, 'raws/http'
   autoload :XML,  'raws/xml'
 
@@ -83,5 +79,5 @@ module RAWS
   autoload :S3,   'raws/s3'
 end
 
-RAWS.http = RAWS::HTTP::HT2P.new
+RAWS.http = RAWS::HTTP::HT2P
 RAWS.xml = RAWS::XML::Nokogiri.new

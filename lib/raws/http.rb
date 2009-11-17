@@ -16,6 +16,7 @@ module RAWS
       end
     end
 
+    class Request; end
     class Response; end
 
     autoload :Typhoeus, 'raws/http/typhoeus'
