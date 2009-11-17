@@ -19,6 +19,68 @@ class RAWS::SQS::Adapter
       params
     end
 
+    def pack_nv_attrs(attrs, replaces=nil, prefix=nil)
+      params = {}
+
+      i = 1
+      attrs.each do |key, val|
+        if !replaces.nil? && replaces.include?(key)
+          params["#{prefix}Attribute.#{i}.Replace"] = 'true'
+        end
+
+        if val.is_a? Array
+          val.each do |v|
+            params["#{prefix}Attribute.#{i}.Name"]  = key
+            params["#{prefix}Attribute.#{i}.Value"] = v
+            i += 1
+          end
+        else
+          params["#{prefix}Attribute.#{i}.Name"]  = key
+          params["#{prefix}Attribute.#{i}.Value"] = val
+          i += 1
+        end
+      end
+
+      params
+    end
+
+    def sign(method, base_uri, params)
+      path = {
+        'AWSAccessKeyId'   => RAWS.aws_access_key_id,
+        'SignatureMethod'  => 'HmacSHA256',
+        'SignatureVersion' => '2',
+        'Timestamp'        => Time.now.utc.iso8601
+      }.merge(params).map do |key, val|
+        "#{RAWS.escape(key)}=#{RAWS.escape(val)}"
+      end.sort.join('&')
+
+      uri = ::URI.parse(base_uri)
+      "#{path}&Signature=" << RAWS.escape(
+        [
+          ::OpenSSL::HMAC.digest(
+            ::OpenSSL::Digest::SHA256.new,
+            RAWS.aws_secret_access_key,
+            "#{method.upcase}\n#{uri.host.downcase}\n#{uri.path}\n#{path}"
+          )
+        ].pack('m').strip
+      )
+    end
+
+    def connect(method, base_uri, params, parser={})
+      doc = nil
+
+      RAWS.http.connect(
+        "#{base_uri}?#{sign(method, base_uri, params)}"
+      ) do |request|
+        request.method = method
+        response = request.send
+        doc = response.parse(parser)
+        response
+      end
+
+      doc
+    end
+
     def create_queue(queue_name, timeout=nil)
       params = {
         'Action'    => 'CreateQueue',
@@ -26,20 +88,20 @@ class RAWS::SQS::Adapter
       }
       params['DefaultVisibilityTimeout'] = timeout if timeout
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def delete_queue(queue_url)
       params = {'Action' => 'DeleteQueue'}
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def list_queues(prefix=nil)
       params = {'Action' => 'ListQueues'}
       params['QueueNamePrefix'] = prefix if prefix
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params), 'QueueUrl')
+      connect('GET', URI, PARAMS.merge(params), 'QueueUrl')
     end
 
     def get_queue_attributes(queue_url, *attrs)
@@ -50,7 +112,7 @@ class RAWS::SQS::Adapter
         params.merge!(pack_attrs(attrs))
       end
 
-      RAWS.fetch(
+      connect(
         'GET',
         queue_url,
         PARAMS.merge(params),
@@ -61,9 +123,9 @@ class RAWS::SQS::Adapter
 
     def set_queue_attributes(queue_url, attrs={})
       params = {'Action' => 'SetQueueAttributes'}
-      params.merge!(RAWS.pack_attrs(attrs))
+      params.merge!(pack_nv_attrs(attrs))
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def send_message(queue_url, msg)
@@ -72,7 +134,7 @@ class RAWS::SQS::Adapter
         'MessageBody' => msg
       }
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def receive_message(queue_url, limit=nil, timeout=nil, *attrs)
@@ -81,7 +143,7 @@ class RAWS::SQS::Adapter
       params['VisibilityTimeout']   = timeout if timeout
       params.merge!(pack_attrs(attrs))
 
-      RAWS.fetch(
+      connect(
         'GET',
         queue_url,
         PARAMS.merge(params),
@@ -97,7 +159,7 @@ class RAWS::SQS::Adapter
         'VisibilityTimeout' => timeout
       }
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def delete_message(queue_url, receipt_handle)
@@ -106,7 +168,7 @@ class RAWS::SQS::Adapter
         'ReceiptHandle' => receipt_handle
       }
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def pack_permission(params)
@@ -131,7 +193,7 @@ class RAWS::SQS::Adapter
       }
       params.merge!(pack_permission(permission))
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
 
     def remove_permission(queue_url, label)
@@ -140,7 +202,7 @@ class RAWS::SQS::Adapter
         'Label'  => label
       }
 
-      RAWS.fetch('GET', queue_url, PARAMS.merge(params))
+      connect('GET', queue_url, PARAMS.merge(params))
     end
   end
 

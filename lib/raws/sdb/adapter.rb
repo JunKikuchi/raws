@@ -2,7 +2,10 @@ class RAWS::SDB::Adapter
   module Adapter20090415
     URI = 'https://sdb.amazonaws.com/'
     PARAMS = {'Version' => '2009-04-15'}
-    KEYWORDS = %w'or and not from where select like null is order by asc desc in between intersection limit every'
+    KEYWORDS = %w'
+      or and not from where select like null is order by asc desc in between
+      intersection limit every
+    '
     REXP_NAME = /^[a-zA-Z_$]/
 
     def pack_attrs(attrs, replaces=nil, prefix=nil)
@@ -30,13 +33,50 @@ class RAWS::SDB::Adapter
       params
     end
 
+    def sign(method, base_uri, params)
+      path = {
+        'AWSAccessKeyId'   => RAWS.aws_access_key_id,
+        'SignatureMethod'  => 'HmacSHA256',
+        'SignatureVersion' => '2',
+        'Timestamp'        => Time.now.utc.iso8601
+      }.merge(params).map do |key, val|
+        "#{RAWS.escape(key)}=#{RAWS.escape(val)}"
+      end.sort.join('&')
+
+      uri = ::URI.parse(base_uri)
+      "#{path}&Signature=" << RAWS.escape(
+        [
+          ::OpenSSL::HMAC.digest(
+            ::OpenSSL::Digest::SHA256.new,
+            RAWS.aws_secret_access_key,
+            "#{method.upcase}\n#{uri.host.downcase}\n#{uri.path}\n#{path}"
+          )
+        ].pack('m').strip
+      )
+    end
+
+    def connect(method, base_uri, params, parser={})
+      doc = nil
+
+      RAWS.http.connect(
+        "#{base_uri}?#{sign(method, base_uri, params)}"
+      ) do |request|
+        request.method = method
+        response = request.send
+        doc = response.parse(parser)
+        response
+      end
+
+      doc
+    end
+
     def create_domain(domain_name)
       params = {
         'Action'     => 'CreateDomain',
         'DomainName' => domain_name
       }
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def delete_domain(domain_name)
@@ -45,7 +85,7 @@ class RAWS::SDB::Adapter
         'DomainName' => domain_name
       }
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def domain_metadata(domain_name)
@@ -54,7 +94,7 @@ class RAWS::SDB::Adapter
         'DomainName' => domain_name
       }
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def list_domains(next_token=nil, max_num=nil, &block)
@@ -62,7 +102,7 @@ class RAWS::SDB::Adapter
       params['NextToken']          = next_token if next_token
       params['MaxNumberOfDomains'] = max_num    if max_num
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
+      connect('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
     end
 
     def get_attributes(domain_name, item_name, *attrs)
@@ -78,7 +118,7 @@ class RAWS::SDB::Adapter
         i += 1
       end
 
-      RAWS.fetch(
+      connect(
         'GET',
         URI,
         PARAMS.merge(params),
@@ -95,7 +135,7 @@ class RAWS::SDB::Adapter
       }
       params.merge!(pack_attrs(attrs, replaces))
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def batch_put_attributes(domain_name, items={}, replaces={})
@@ -111,7 +151,7 @@ class RAWS::SDB::Adapter
         i += 1
       end
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def delete_attributes(domain_name, item_name, attrs={})
@@ -122,7 +162,7 @@ class RAWS::SDB::Adapter
       }
       params.merge!(pack_attrs(attrs))
 
-      RAWS.fetch('GET', URI, PARAMS.merge(params))
+      connect('GET', URI, PARAMS.merge(params))
     end
 
     def quote(val)
@@ -150,7 +190,7 @@ class RAWS::SDB::Adapter
       }
       params['NextToken'] = next_token if next_token
 
-      RAWS.fetch(
+      connect(
         'GET',
         URI,
         PARAMS.merge(params),
