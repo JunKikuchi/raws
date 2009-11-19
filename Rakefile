@@ -23,6 +23,7 @@ begin
     s.add_dependency('nokogiri', '>=1.3.3')
     s.add_dependency('uuidtools', '>=2.0.0')
   end
+  Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
 end
