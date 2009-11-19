@@ -19,6 +19,7 @@ begin
     s.require_path = "lib"
     s.has_rdoc = true
     s.add_dependency('typhoeus', '>=0.1.9')
+    s.add_dependency('ht2p',     '>=0.0.5')
     s.add_dependency('nokogiri', '>=1.3.3')
     s.add_dependency('uuidtools', '>=2.0.0')
   end

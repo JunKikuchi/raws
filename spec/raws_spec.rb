@@ -7,8 +7,8 @@ describe RAWS do
         aws_access_key_id
         aws_secret_access_key
         escape
-        sign
-        fetch
+        unescape
+        logger
       '.each do |val|
         RAWS.should respond_to val.to_sym
       end

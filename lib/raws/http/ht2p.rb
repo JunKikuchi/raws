@@ -77,7 +77,7 @@ module RAWS::HTTP::HT2P
     end
 
     def parse(params={})
-      @doc = RAWS.xml.parse receive, params
+      @doc = RAWS.xml.parse(receive, params)
     end
   end
 end

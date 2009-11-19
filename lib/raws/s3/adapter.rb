@@ -75,7 +75,7 @@ class RAWS::S3::Adapter
 
     def connect(method, params={}, &block)
       uri, path = parse_params params
-      RAWS.http.connect(uri) do |request|
+      RAWS::S3.http.connect(uri) do |request|
         request.method = method
         request.header['date'] = Time.now.httpdate
         request.before_send do |_request|

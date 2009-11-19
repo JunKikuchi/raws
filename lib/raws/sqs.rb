@@ -4,6 +4,12 @@ class RAWS::SQS
   class << self
     include Enumerable
 
+    attr_writer :http
+
+    def http
+      @http ||= RAWS.http
+    end
+
     def queue_url(queue_name)
       data = Adapter.list_queues(
         queue_name

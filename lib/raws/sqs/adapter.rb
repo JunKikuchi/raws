@@ -69,7 +69,7 @@ class RAWS::SQS::Adapter
     def connect(method, base_uri, params, parser={})
       doc = nil
 
-      RAWS.http.connect(
+      RAWS::SQS.http.connect(
         "#{base_uri}?#{sign(method, base_uri, params)}"
       ) do |request|
         request.method = method

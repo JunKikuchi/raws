@@ -2,8 +2,8 @@ require 'nokogiri'
 
 module RAWS
   module XML
-    class Nokogiri
-      def self.parse(doc, params={}, ret={})
+    module Nokogiri
+      def self._parse(doc, params={}, ret={})
         multiple = params[:multiple] || []
         unpack   = params[:unpack]   || []
 
@@ -28,10 +28,10 @@ module RAWS
           else
             if ret.key? name
               ret[name] << {}
-              parse(tag, params, ret[name].last)
+              _parse(tag, params, ret[name].last)
             else
               ret[name] = {}
-              parse(tag, params, ret[name])
+              _parse(tag, params, ret[name])
             end
           end
         end
@@ -40,8 +40,8 @@ module RAWS
         ret
       end
 
-      def parse(xml, params={})
-        self.class.parse(::Nokogiri::XML.parse(xml), params)
+      def self.parse(xml, params={})
+        _parse(::Nokogiri::XML.parse(xml), params)
       end
     end
   end

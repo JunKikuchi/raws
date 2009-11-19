@@ -6,6 +6,12 @@ class RAWS::SDB
   class << self
     include Enumerable
 
+    attr_writer :http
+
+    def http
+      @http ||= RAWS.http
+    end
+
     def create_domain(domain_name)
       Adapter.create_domain(domain_name)
     end

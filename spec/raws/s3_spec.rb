@@ -1,5 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
+RAWS::S3.http = RAWS::HTTP::HT2P
+
 RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
   location_label = location ? location : 'US'
 

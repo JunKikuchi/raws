@@ -4,6 +4,14 @@ class RAWS::S3
   autoload :Model, 'raws/s3/model'
 
   class << self
+    include Enumerable
+
+    attr_writer :http
+
+    def http
+      @http ||= RAWS.http
+    end
+
     def create_bucket(bucket_name, location=nil, header={})
       Adapter.put_bucket(bucket_name, location, header)
     end
