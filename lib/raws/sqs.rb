@@ -36,7 +36,7 @@ class RAWS::SQS
       Adapter.delete_queue(queue_url)
     end
 
-    def list(prefix=nil)
+    def queues(prefix=nil)
       (
         Adapter.list_queues(
           prefix
@@ -45,9 +45,10 @@ class RAWS::SQS
         self.new(val)
       end
     end
+    alias :list :queues
 
     def each(&block)
-      list.each(&block)
+      queues.each(&block)
     end
 
     def [](queue_name)
