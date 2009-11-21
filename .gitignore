@@ -1,5 +1,22 @@
+## MAC OS
 .DS_Store
-*.gem
+
+## TEXTMATE
+*.tmproj
+tmtags
+
+## EMACS
+*~
+\#*
+.\#*
+
+## VIM
+*.swp
+
+## PROJECT::GENERAL
+coverage
+rdoc
+pkg
+
+## PROJECT::SPECIFIC
 /spec/spec_config.rb
-/rdoc
-/pkg
