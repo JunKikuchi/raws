@@ -22,7 +22,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
     msg.delete
   end
   
-  RAWS::SQS['test_queue'].delete_queue
+  RAWS::SQS.delete_queue('test_queue')
 
 == SDB (Amazon SimpleDB)
 
@@ -57,7 +57,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   RAWS::SDB['test_domain'].delete('2')
   RAWS::SDB['test_domain'].delete('3')
   
-  RAWS::SDB['test_domain'].delete_domain
+  RAWS::SDB.delete_domain('test_domain')
 
 クラスとして使う場合
 
@@ -110,7 +110,27 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   
   RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
   RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
-
-  RAWS::S3.create_bucket('test_bucket')
   
-  RAWS::S3['test_bucket'].delete_bucket
+  RAWS::S3.create_bucket('test-bucket')
+  
+  RAWS::S3['test-bucket'].put('helloworld') do |request|
+    request.header['content-type'] = 'text/plain'
+    request.header['content-length'] = ("Hello World\n".size * 1000).to_i
+    request.send do |io|
+      1000.times do
+        io.write "Hellow World\n"
+      end
+    end
+  end
+  
+  RAWS::S3['test-bucket'].get('helloworld') do |request|
+    response = request.send
+    p response.header
+    response.receive do |io|
+      while chunk = io.read
+        print chunk
+      end
+    end
+  end
+  
+  RAWS::S3.delete_bucket('test-bucket')

@@ -175,9 +175,7 @@ class RAWS::S3::Adapter
         :path   => '/' << name
       ) do |request|
         request.header.merge!(header)
-        response = request.send(&block)
-        response.receive
-        response
+        block.call(request)
       end
     end
 
@@ -200,9 +198,13 @@ class RAWS::S3::Adapter
         :path   => "/#{name}"
       ) do |request|
         request.header.merge! header
-        response = request.send
-        response.receive(&block)
-        response
+        if block_given?
+          block.call(request)
+        else
+          response = request.send
+          response.receive
+          response
+        end
       end
     end
 

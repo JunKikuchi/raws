@@ -37,6 +37,11 @@ class RAWS::S3
         self[val['Name']]
       end
     end
+    alias :list :buckets
+
+    def each(&block)
+      buckets.each(&block)
+    end
 
     def [](bucket_name)
       @cache ||= {}
@@ -59,7 +64,7 @@ class RAWS::S3
     end
     alias :all :filter
 
-    def put(bucket_name, name, header, &block)
+    def put(bucket_name, name, header={}, &block)
       Adapter.put_object(bucket_name, name, header, &block)
     end
 
@@ -67,8 +72,8 @@ class RAWS::S3
       Adapter.copy_object(src_bucket, src_name, dest_bucket, dest_name, header)
     end
 
-    def get(bucket_name, name, params={}, &block)
-      Adapter.get_object(bucket_name, name, params, &block)
+    def get(bucket_name, name, header={}, &block)
+      Adapter.get_object(bucket_name, name, header, &block)
     end
 
     def head(bucket_name, name)
@@ -105,7 +110,7 @@ class RAWS::S3
   end
   alias :all :filter
 
-  def put(name, header, &block)
+  def put(name, header={}, &block)
     self.class.put(@bucket_name, name, header, &block)
   end
 

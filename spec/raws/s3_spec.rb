@@ -8,41 +8,36 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
   describe RAWS::S3 do
     describe 'class' do
       before(:all) do
-        response = RAWS::S3.create_bucket(bucket_name, location)
-        response.should be_kind_of(RAWS::HTTP::Response)
+        #response = RAWS::S3.create_bucket(bucket_name, location)
+        #response.should be_kind_of(RAWS::HTTP::Response)
 
-        RAWS::S3.put(
-          bucket_name,
-          'aaa',
-          'content-length' => 3
-        ) do |io|
-          io.write 'AAA'
+        begin
+          RAWS::S3.put(bucket_name, 'aaa') do |request|
+            request.send 'AAA'
+          end
+
+        RAWS::S3.put(bucket_name, 'bbb') do |request|
+          request.header['content-length'] = 3
+          request.send do |io|
+           io.write 'BBB'
+          end
         end
 
-        RAWS::S3.put(
-          bucket_name,
-          'bbb',
-          'content-length' => 3
-        ) do |io|
-          io.write 'BBB'
+        RAWS::S3.put(bucket_name, 'ccc') do |request|
+          request.send 'CCC'
         end
-
-        RAWS::S3.put(
-          bucket_name,
-          'ccc',
-          'content-length' => 3
-        ) do |io|
-          io.write 'CCC'
+        rescue => e
+          d e
         end
       end
-
+=begin
       after(:all) do
         response = RAWS::S3.delete_bucket(bucket_name, :force)
         response.should be_kind_of(RAWS::HTTP::Response)
 
         sleep 30
       end
-
+=end
       it "owner should return a owner information of the bucket" do
         RAWS::S3.owner.should be_instance_of(Hash)
         RAWS::S3.owner['DisplayName'].should be_instance_of(String)
@@ -79,15 +74,22 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it 'put, get and delete method should put, get and delete the object' do
-        response = RAWS::S3.put(bucket_name, 'a', 'content-length' => 1) do |io|
-          io.write 'A'
-        end
-        response.should be_kind_of(RAWS::HTTP::Response)
+        RAWS::S3.put(bucket_name, 'a') do |request|
+          request.should be_kind_of(RAWS::HTTP::Request)
 
-        response = RAWS::S3.get(bucket_name, 'a') do |io|
-          io.read
+          response = request.send('AAA')
+
+          response.should be_kind_of(RAWS::HTTP::Response)
         end
-        response.should be_kind_of(RAWS::HTTP::Response)
+
+        RAWS::S3.get(bucket_name, 'a') do |request|
+          request.should be_kind_of(RAWS::HTTP::Request)
+
+          response = request.send
+          response.receive.should == 'AAA'
+
+          response.should be_kind_of(RAWS::HTTP::Response)
+        end
 
         response = RAWS::S3.delete(bucket_name, 'a')
         response.should be_kind_of(RAWS::HTTP::Response)
@@ -102,13 +104,13 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         response.should be_kind_of(RAWS::HTTP::Response)
 
         src = nil
-        RAWS::S3.get(bucket_name, 'aaa') do |io|
-          src = io.read
+        RAWS::S3.get(bucket_name, 'aaa') do |request|
+          src = request.send.receive
         end
 
         dest = nil
-        RAWS::S3.get(bucket_name, 'AAA') do |io|
-          dest = io.read
+        RAWS::S3.get(bucket_name, 'AAA') do |request|
+          dest = request.send.receive
         end
 
         dest.should == src
@@ -126,20 +128,25 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
     describe 'object' do
       before(:all) do
         @bucket = RAWS::S3[bucket_name]
-        @bucket.create_bucket.should be_kind_of(RAWS::HTTP::Response)
+        #@bucket.create_bucket.should be_kind_of(RAWS::HTTP::Response)
 
-        @bucket.put('aaa', 'content-length' => 3) do |io| io.write 'AAA' end
-        @bucket.put('bbb', 'content-length' => 3) do |io| io.write 'BBB' end
-        @bucket.put('ccc', 'content-length' => 3) do |io| io.write 'CCC' end
+        @bucket.put('aaa') do |request| request.send 'AAA' end
+        @bucket.put('bbb') do |request|
+          request.header['content-length'] = 3
+          request.send do |io|
+            io.write 'AAA'
+          end
+        end
+        @bucket.put('ccc') do |request| request.send 'CCC' end
       end
-
+=begin
       after(:all) do
         response = @bucket.delete_bucket(:force)
         response.should be_kind_of(RAWS::HTTP::Response)
 
         sleep 30
       end
-
+=end
       it "location should return location of the bucket" do
         @bucket.location.should == location_label
       end
@@ -152,13 +159,22 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it 'put, get and delete method should put, get and delete the object' do
-        @bucket.put('a', 'content-length' => 1) do |io|
-          io.write 'A'
-        end.should be_kind_of(RAWS::HTTP::Response)
+        @bucket.put('a') do |request|
+          request.should be_kind_of(RAWS::HTTP::Request)
 
-        @bucket.get('a') do |io|
-          io.read
-        end.should be_kind_of(RAWS::HTTP::Response)
+          response = request.send('AAA')
+
+          response.should be_kind_of(RAWS::HTTP::Response)
+        end
+
+        @bucket.get('a') do |request|
+          request.should be_kind_of(RAWS::HTTP::Request)
+
+          response = request.send
+          response.receive.should == 'AAA'
+
+          response.should be_kind_of(RAWS::HTTP::Response)
+        end
 
         @bucket.delete('a').should be_kind_of(RAWS::HTTP::Response)
 
@@ -172,13 +188,13 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         response.should be_kind_of(RAWS::HTTP::Response)
 
         src = nil
-        @bucket.get('aaa') do |io|
-          src = io.read
+        @bucket.get('aaa') do |request|
+          src = request.send.receive
         end
 
         dest = nil
-        @bucket.get('AAA') do |io|
-          dest = io.read
+        @bucket.get('AAA') do |request|
+          dest = request.send.receive
         end
 
         dest.should == src
