@@ -31,7 +31,7 @@ class RAWS::HTTP::Typhoeus
       @before_send && @before_send.call(self)
       response = Response.new(
         ::Typhoeus::Request.__send__(
-          @method.downcase.to_sym,
+          @method.to_s.downcase.to_sym,
           @uri,
           :headers => @header,
           :body => if block_given?
