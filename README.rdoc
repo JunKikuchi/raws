@@ -107,6 +107,8 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
 
 === S3 (Amazon Simple Storage Service)
 
+プリミティブな使い方
+
   require 'rubygems'
   require 'raws'
   
@@ -136,6 +138,43 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   end
   
   RAWS::S3.delete_bucket('test-bucket')
+
+クラスとして使う場合
+
+  require 'rubygems'
+  require 'raws'
+  
+  RAWS.aws_access_key_id = _AWS_ACCESS_KEY_ID_
+  RAWS.aws_secret_access_key = _AWS_SECRET_ACCESS_KEY_
+  
+  class Foo
+    include RAWS::S3::Model
+    self.bucket_name = 'test-bucket'
+  end
+  
+  Foo.create_bucket
+  
+  foo = Foo.new('helloworld')
+  foo.metadata['ja'] = 'こんにちは'
+  foo.send(
+    'content-type' => 'text/plain',
+    'content-length' => ("Hello World\n".size * 1000).to_i
+  ) do |io|
+    1000.times do
+      io.write "Hellow World\n"
+    end
+  end
+  
+  foo = Foo.find('helloworld')
+  p foo.header
+  p foo.metadata
+  foo.receive do |io|
+    while chunk = io.read
+      print chunk
+    end
+  end
+  
+  Foo.delete_bucket
 
 == Note on Patches/Pull Requests
  
