@@ -25,19 +25,22 @@ class RAWS::S3
     end
 
     def owner
-      @owner ||= Adapter.get_service.doc['ListAllMyBucketsResult']['Owner']
+      Adapter.get_service.doc['ListAllMyBucketsResult']['Owner']
+    end
+
+    def list
+      Adapter.get_service.doc['ListAllMyBucketsResult']
     end
 
     def buckets
       begin
-        response = Adapter.get_service.doc['ListAllMyBucketsResult']
+        response = list
         @owner ||= response['Owner']
         response['Buckets']['Bucket'] || []
       end.map do |val|
         self[val['Name']]
       end
     end
-    alias :list :buckets
 
     def each(&block)
       buckets.each(&block)
@@ -85,12 +88,11 @@ class RAWS::S3
     end
   end
 
-  attr_reader :bucket_name, :creation_date
+  attr_reader :bucket_name
   alias :name :bucket_name
 
-  def initialize(bucket_name, creation_date=nil)
+  def initialize(bucket_name)
     @bucket_name = bucket_name
-    @creation_date = Time.parse(creation_date) if creation_date
   end
 
   def create_bucket(location=nil)

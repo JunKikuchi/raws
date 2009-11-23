@@ -21,28 +21,30 @@ class RAWS::SDB
     end
 
     def metadata(domain_name)
-      Adapter.domain_metadata(
-        domain_name
-      )['DomainMetadataResponse']['DomainMetadataResult']
+      doc = Adapter.domain_metadata(domain_name)
+      doc['DomainMetadataResponse']['DomainMetadataResult']
+    end
+
+    def list(next_token=nil, max_num=nil)
+      doc = Adapter.list_domains(next_token, max_num)
+      doc['ListDomainsResponse']['ListDomainsResult']
     end
 
     def domains(next_token=nil, max_num=nil)
-      Adapter.list_domains(
-        next_token,
-        max_num
-      )['ListDomainsResponse']['ListDomainsResult']
+      data = list(next_token, max_num)
+      {
+        'Domains' => (data['DomainName'] || []).map do |val|
+          self.new(val)
+        end,
+        'NextToken' => data['NextToken']
+      }
     end
-    alias :list :domains
 
     def each(&block)
       next_token = nil
       begin
         data = domains(next_token)
-        if domain = data['DomainName']
-          domain.each do |val|
-            block.call(self.new(val))
-          end
-        end
+        data['Domains'].each(&block)
       end while next_token = data['NextToken']
     end
 

@@ -1,7 +1,6 @@
 require 'spec/spec_config'
 
 describe RAWS::SQS do
-=begin
   before :all do
     begin
       RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
@@ -29,6 +28,7 @@ describe RAWS::SQS do
         create_queue
         delete_queue
         list
+        queues
         each
         []
         get_attrs
@@ -41,7 +41,11 @@ describe RAWS::SQS do
     end
 
     it 'list' do
-      RAWS::SQS.list.each do |queue|
+      RAWS::SQS.list
+    end
+
+    it 'queues' do
+      RAWS::SQS.queues.each do |queue|
         queue.should be_kind_of RAWS::SQS
       end
     end
@@ -56,7 +60,7 @@ describe RAWS::SQS do
       RAWS::SQS[RAWS_SQS_QUEUE].should be_kind_of RAWS::SQS
     end
   end
-=end
+
   describe 'object' do
     before do
       @queue = RAWS::SQS[RAWS_SQS_QUEUE]
@@ -128,7 +132,6 @@ describe RAWS::SQS do
     end
 
     it 'change_message_visibility' do
-=begin
       5.times do |i|
         p i
         @queue.receive.each do |msg|
@@ -136,7 +139,6 @@ describe RAWS::SQS do
         end
         sleep 5
       end
-=end
       @queue.send('change message visibility')
 
       msg_id, time = nil, nil
