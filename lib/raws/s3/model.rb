@@ -34,7 +34,8 @@ module RAWS::S3::Model
     attr_reader :key
 
     def initialize(key, header=nil)
-      @key, @metadata, @header = key, Metadata.new(header || {}), header
+      @key, @header = key, header
+      @metadata = RAWS::S3::Metadata.new(header || {})
       after_initialize
     end
 
@@ -92,46 +93,6 @@ module RAWS::S3::Model
     mod.class_eval do
       include InstanceMethods
       extend ClassMethods
-    end
-  end
-
-  class Metadata < Hash
-    X_AMZ_META = 'x-amz-meta-'
-
-    def initialize(header={})
-      super()
-      decode(header)
-    end
-
-    def decode(header)
-      clear
-      header.select do |key, val|
-        key.match(/^#{X_AMZ_META}/)
-      end.each do |key, val|
-        self[key.sub(X_AMZ_META, '')] = begin
-          a = val.split(',').map do |val|
-            RAWS.unescape(val)
-          end
-          1 < a.size ? a : a.first
-        end
-      end
-      self
-    end
-
-    def encode
-      self.inject({}) do |ret, (key, val)|
-        key = X_AMZ_META + key
-
-        if val.is_a? Array
-          ret[key] = val.map do |v|
-            RAWS.escape(v.strip)
-          end.join(',')
-        else
-          ret[key] = RAWS.escape(val.strip)
-        end
-
-        ret
-      end
     end
   end
 end

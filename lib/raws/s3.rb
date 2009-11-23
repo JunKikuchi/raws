@@ -1,5 +1,5 @@
 class RAWS::S3
-  autoload :S3Object, 'raws/s3/s3object'
+  autoload :Metadata, 'raws/s3/metadata'
   autoload :Adapter, 'raws/s3/adapter'
   autoload :Model, 'raws/s3/model'
 
