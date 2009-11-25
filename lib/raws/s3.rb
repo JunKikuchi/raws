@@ -2,6 +2,7 @@ class RAWS::S3
   autoload :Metadata, 'raws/s3/metadata'
   autoload :Adapter, 'raws/s3/adapter'
   autoload :Model, 'raws/s3/model'
+  autoload :ACL, 'raws/s3/acl'
 
   class << self
     include Enumerable
