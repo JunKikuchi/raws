@@ -162,40 +162,53 @@ class RAWS::S3::Adapter
       end
     end
 
+    def get_acl(bucket_name, key)
+      connect(
+        'GET', 
+        :bucket => bucket_name,
+        :path   => "/#{key}",
+        :query  => {'acl' => nil}
+      ) do |request|
+        response = request.send
+        response.parse :multiple => ['Grant']
+        response
+      end
+    end
+
     def delete_bucket(bucket_name)
       connect 'DELETE', :bucket => bucket_name do |request|
         request.send
       end
     end
 
-    def put_object(bucket_name, name, header, &block)
+    def put_object(bucket_name, key, header, &block)
       connect(
         'PUT',
         :bucket => bucket_name,
-        :path   => '/' << name
+        :path   => '/' << key
       ) do |request|
         request.header.merge!(header)
         block.call(request)
       end
     end
 
-    def copy_object(src_bucket, src_name, dest_bucket, dest_name, header={})
+    def copy_object(src_bucket, src_key, dest_bucket, dest_key, header={})
       connect(
         'PUT',
         :bucket => dest_bucket,
-        :path   => '/' << dest_name
+        :path   => '/' << dest_key
       ) do |request|
         request.header.merge! header
-        request.header['x-amz-copy-source'] = "/#{src_bucket}/#{src_name}"
+        request.header['x-amz-copy-source'] = "/#{src_bucket}/#{src_key}"
         request.send
       end
     end
 
-    def get_object(bucket_name, name=nil, header={}, &block)
+    def get_object(bucket_name, key=nil, header={}, &block)
       connect(
         'GET',
         :bucket => bucket_name,
-        :path   => "/#{name}"
+        :path   => "/#{key}"
       ) do |request|
         request.header.merge! header
         if block_given?
@@ -208,11 +221,11 @@ class RAWS::S3::Adapter
       end
     end
 
-    def head_object(bucket_name, name)
+    def head_object(bucket_name, key)
       connect(
         'HEAD',
         :bucket => bucket_name,
-        :path   => '/' << name
+        :path   => '/' << key
       ) do |request|
         response = request.send
         response.receive
@@ -220,11 +233,11 @@ class RAWS::S3::Adapter
       end
     end
 
-    def delete_object(bucket_name, name)
+    def delete_object(bucket_name, key)
       connect(
         'DELETE',
         :bucket => bucket_name,
-        :path   => '/' << name
+        :path   => '/' << key
       ) do |request|
         response = request.send
         response.receive

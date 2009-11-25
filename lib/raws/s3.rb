@@ -57,6 +57,11 @@ class RAWS::S3
       location.empty? ? 'US' : location
     end
 
+    def acl(bucket_name, key=nil)
+      response = Adapter.get_acl(bucket_name, key)
+      response.doc
+    end
+
     def filter(bucket_name, params={})
       begin
         response = Adapter.get_bucket(bucket_name, params)
@@ -67,24 +72,24 @@ class RAWS::S3
     end
     alias :all :filter
 
-    def put(bucket_name, name, header={}, &block)
-      Adapter.put_object(bucket_name, name, header, &block)
+    def put(bucket_name, key, header={}, &block)
+      Adapter.put_object(bucket_name, key, header, &block)
     end
 
-    def copy(src_bucket, src_name, dest_bucket, dest_name, header={})
-      Adapter.copy_object(src_bucket, src_name, dest_bucket, dest_name, header)
+    def copy(src_bucket, src_key, dest_bucket, dest_key, header={})
+      Adapter.copy_object(src_bucket, src_key, dest_bucket, dest_key, header)
     end
 
-    def get(bucket_name, name, header={}, &block)
-      Adapter.get_object(bucket_name, name, header, &block)
+    def get(bucket_name, key, header={}, &block)
+      Adapter.get_object(bucket_name, key, header, &block)
     end
 
-    def head(bucket_name, name)
-      Adapter.head_object(bucket_name, name)
+    def head(bucket_name, key)
+      Adapter.head_object(bucket_name, key)
     end
 
-    def delete(bucket_name, name)
-      Adapter.delete_object(bucket_name, name)
+    def delete(bucket_name, key)
+      Adapter.delete_object(bucket_name, key)
     end
   end
 
@@ -107,29 +112,33 @@ class RAWS::S3
     self.class.location(@bucket_name)
   end
 
+  def acl(key=nil)
+    self.class.acl(@bucket_name, key)
+  end
+
   def filter(params={})
     self.class.filter(@bucket_name, params)
   end
   alias :all :filter
 
-  def put(name, header={}, &block)
-    self.class.put(@bucket_name, name, header, &block)
+  def put(key, header={}, &block)
+    self.class.put(@bucket_name, key, header, &block)
   end
 
-  def copy(name, dest_bucket, dest_name)
-    self.class.copy(@bucket_name, name, dest_bucket, dest_name)
+  def copy(key, dest_bucket, dest_key)
+    self.class.copy(@bucket_name, key, dest_bucket, dest_key)
   end
 
-  def get(name, header={}, &block)
-    self.class.get(@bucket_name, name, header, &block)
+  def get(key, header={}, &block)
+    self.class.get(@bucket_name, key, header, &block)
   end
 
-  def head(name)
-    self.class.head(@bucket_name, name)
+  def head(key)
+    self.class.head(@bucket_name, key)
   end
 
-  def delete(name)
-    self.class.delete(@bucket_name, name)
+  def delete(key)
+    self.class.delete(@bucket_name, key)
   end
 
   def <=>(a)
