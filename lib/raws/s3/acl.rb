@@ -2,6 +2,8 @@ class RAWS::S3::ACL
   class Owner
     attr_accessor :id, :name
 
+    alias :display_name :name
+
     def initialize(owner)
       @id, @name = owner['ID'], owner['DisplayName']
     end
@@ -65,6 +67,8 @@ class RAWS::S3::ACL
     end
 
     class Email < Grant
+      attr_accessor :email
+
       def initialize(grant)
         super
         @email = grant['Grantee']['EmailAddress']
