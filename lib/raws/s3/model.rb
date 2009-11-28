@@ -19,7 +19,7 @@ module RAWS::S3::Model
 
     def find(key, header={})
       begin
-        self.new(key, RAWS::S3.head(self.bucket_name, key).header)
+        self.new(key, RAWS::S3.head(self.bucket_name, key))
       rescue RAWS::HTTP::Error => e
         if e.response.code == 404
           nil
@@ -28,31 +28,33 @@ module RAWS::S3::Model
         end
       end
     end
+
+    def acl
+      RAWS::S3.acl(self.bucket_name)
+    end
   end
 
   module InstanceMethods
-    attr_reader :key
+    attr_reader :key, :metadata
 
     def initialize(key, header=nil)
-      @key, @header = key, header
-      @metadata = RAWS::S3::Metadata.new(header || {})
+      @key = key
+      @header = header
+      @metadata = RAWS::S3::Metadata.new(@header || {})
+      @acl = nil
       after_initialize
     end
 
     def header
-      begin
-        @header = RAWS::S3.head(self.class.bucket_name, @key).header
-      rescue RAWS::HTTP::Error => e
-        if e.response.code == 404
-          {}
-        else
-          raise e
-        end
-      end
+      @header ||= RAWS::S3.head(self.class.bucket_name, @key)
     end
 
-    def metadata
-      @header ? @metadata : @metadata.decode(header)
+    def acl
+      @acl ||= RAWS::S3.acl(self.class.bucket_name, @key)
+    end
+
+    def delete
+      RAWS::S3.delete(self.class.bucket_name, @key)
     end
 
     def receive(header={}, &block)

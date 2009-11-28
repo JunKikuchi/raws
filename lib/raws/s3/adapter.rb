@@ -98,10 +98,8 @@ class RAWS::S3::Adapter
         request.header.merge! header
         response = request.send(
           if location
-            "<CreateBucketConfiguration>"
-              "<LocationConstraint>#{
-                location
-              }</LocationConstraint>"
+            "<CreateBucketConfiguration>" <<
+              "<LocationConstraint>#{location}</LocationConstraint>" <<
             "</CreateBucketConfiguration>"
           end
         )
@@ -117,9 +115,9 @@ class RAWS::S3::Adapter
         :query  => {'requestPayment' => nil}
       ) do |request|
         response = request.send\
-          '<RequestPaymentConfiguration'
-            ' xmlns="http://s3.amazonaws.com/doc/2006-03-01/">'
-            "<Payer>#{requester}</Payer>"
+          '<RequestPaymentConfiguration' <<
+            ' xmlns="http://s3.amazonaws.com/doc/2006-03-01/">' <<
+            "<Payer>#{requester}</Payer>" <<
           '</RequestPaymentConfiguration>'
         response.receive
         response
@@ -170,6 +168,19 @@ class RAWS::S3::Adapter
         :query  => {'acl' => nil}
       ) do |request|
         response = request.send
+        response.parse :multiple => ['Grant']
+        response
+      end
+    end
+
+    def put_acl(bucket_name, key, acl)
+      connect(
+        'PUT', 
+        :bucket => bucket_name,
+        :path   => "/#{key}",
+        :query  => {'acl' => nil}
+      ) do |request|
+        response = request.send acl
         response.parse :multiple => ['Grant']
         response
       end

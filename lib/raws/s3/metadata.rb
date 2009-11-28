@@ -1,9 +1,15 @@
 class RAWS::S3::Metadata < Hash
   X_AMZ_META = 'x-amz-meta-'
 
-  def initialize(header={})
+  def initialize(header)
     super()
+    @header = header
     decode(header)
+  end
+
+  def reload
+    @header.reload
+    decode(@header)
   end
 
   def decode(header)

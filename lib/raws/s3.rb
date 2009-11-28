@@ -1,6 +1,7 @@
 class RAWS::S3
   autoload :Metadata, 'raws/s3/metadata'
   autoload :Adapter, 'raws/s3/adapter'
+  autoload :Header, 'raws/s3/header'
   autoload :Model, 'raws/s3/model'
   autoload :ACL, 'raws/s3/acl'
 
@@ -59,8 +60,7 @@ class RAWS::S3
     end
 
     def acl(bucket_name, key=nil)
-      response = Adapter.get_acl(bucket_name, key)
-      response.doc
+      ACL.new(bucket_name, key)
     end
 
     def filter(bucket_name, params={})
@@ -86,7 +86,7 @@ class RAWS::S3
     end
 
     def head(bucket_name, key)
-      Adapter.head_object(bucket_name, key)
+      Header.new(bucket_name, key)
     end
 
     def delete(bucket_name, key)

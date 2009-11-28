@@ -20,17 +20,17 @@ class RAWS::S3::ACL
     def initialize(grants)
       super()
       grants.each do |grant|
-        grantee = grant['Grantee']
-        if grantee['ID']
-          push Grant::ID.new(grant)
-        elsif grantee['EmailAddress']
-          push Grant::Email.new(grant)
+        grantee, permission = grant['Grantee'], grant['Permission']
+        if id = grantee['ID']
+          push ID.new(permission, id, grantee['DisplayName'])
+        elsif email = grantee['EmailAddress']
+          push Email.new(permission, email)
         else
           case grantee['URI']
           when 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
-            push Grant::Group.new(grant)
+            push Group.new(permission)
           when 'http://acs.amazonaws.com/groups/global/AllUsers'
-            push Grant::Anonymouse.new(grant)
+            push Anonymouse.new(permission)
           end
         end
       end
@@ -46,66 +46,10 @@ class RAWS::S3::ACL
   end
 
   class Grant
-    class ID < Grant
-      attr_accessor :id, :name
-
-      def initialize(grant)
-        super
-        grantee = grant['Grantee']
-        @id, @name = grantee['ID'], grantee['DisplayName']
-      end
-
-      def to_xml
-        '<Grant>' <<
-          '<Grantee xsi:type="CanonicalUser">' <<
-            "<ID>#{@id}</ID>" <<
-            "<DisplayName>#{@name}</DisplayName>" <<
-          '</Grantee>' <<
-          super <<
-        '</Grant>'
-      end
-    end
-
-    class Email < Grant
-      attr_accessor :email
-
-      def initialize(grant)
-        super
-        @email = grant['Grantee']['EmailAddress']
-      end
-
-      def to_xml
-        '<Grant>' <<
-          '<Grantee xsi:type="AmazonCustomerByEmail">' <<
-            "<EmailAddress>#{@email}</EmailAddress>" <<
-          '</Grantee>' <<
-          super <<
-        '</Grant>'
-      end
-    end
-
-    class Group < Grant
-      def initialize(grant)
-        super
-        @uri = grant['Grantee']['URI']
-      end
-
-      def to_xml
-        '<Grant>' <<
-          '<Grantee xsi:type="Group">' <<
-            "<URI>#{@uri}</URI>" <<
-          '</Grantee>' <<
-          super <<
-        '</Grant>'
-      end
-    end
-
-    class Anonymouse < Group; end
-
     attr_accessor :permission
 
-    def initialize(grant)
-      @permission = grant['Permission']
+    def initialize(permission)
+      @permission = permission
     end
 
     def to_xml
@@ -113,9 +57,85 @@ class RAWS::S3::ACL
     end
   end
 
-  attr_reader :owner, :grants
+  class ID < Grant
+    attr_accessor :id, :name
 
-  def initialize(doc)
+    def initialize(permission, id, name=nil)
+      super(permission)
+      @id, @name = id, name
+    end
+
+    def to_xml
+      '<Grant>' <<
+        '<Grantee' <<
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
+        ' xsi:type="CanonicalUser">' <<
+          "<ID>#{@id}</ID>" <<
+          "<DisplayName>#{@name}</DisplayName>" <<
+        '</Grantee>' <<
+        super <<
+      '</Grant>'
+    end
+  end
+
+  class Email < Grant
+    attr_accessor :email
+
+    def initialize(permission, email)
+      super(permission)
+      @email = email
+    end
+
+    def to_xml
+      '<Grant>' <<
+        '<Grantee' <<
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
+        ' xsi:type="AmazonCustomerByEmail">' <<
+          "<EmailAddress>#{@email}</EmailAddress>" <<
+        '</Grantee>' <<
+        super <<
+      '</Grant>'
+    end
+  end
+
+  class Group < Grant
+    def initialize(permission)
+      super(permission)
+      @uri = 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+    end
+
+    def to_xml
+      '<Grant>' <<
+        '<Grantee' <<
+        ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
+        ' xsi:type="Group">' <<
+          "<URI>#{@uri}</URI>" <<
+        '</Grantee>' <<
+        super <<
+      '</Grant>'
+    end
+  end
+
+  class Anonymouse < Group
+    def initialize(permission)
+      super(permission)
+      @uri = 'http://acs.amazonaws.com/groups/global/AllUsers'
+    end
+  end
+
+  attr_reader :bucket_name, :key, :owner, :grants
+
+  def initialize(bucket_name, key=nil)
+    @bucket_name, @key = bucket_name, key
+    reload
+  end
+
+  def save
+    RAWS::S3::Adapter.put_acl(@bucket_name, @key, to_xml)
+  end
+
+  def reload
+    doc = RAWS::S3::Adapter.get_acl(@bucket_name, @key).doc
     acp = doc['AccessControlPolicy']
     @owner = Owner.new(acp['Owner'])
     @grants = Grants.new(acp['AccessControlList']['Grant'])

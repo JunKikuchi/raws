@@ -121,7 +121,7 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
 
       it "head method should return header information of the object" do
         response = RAWS::S3.head(bucket_name, 'aaa')
-        response.should be_kind_of(RAWS::HTTP::Response)
+        response.should be_kind_of(RAWS::S3::Header)
       end
     end
 
@@ -203,7 +203,7 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it "head method should return header information of the object" do
-        @bucket.head('aaa').should be_kind_of(RAWS::HTTP::Response)
+        @bucket.head('aaa').should be_kind_of(RAWS::S3::Header)
       end
     end
   end
