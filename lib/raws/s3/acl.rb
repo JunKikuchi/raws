@@ -16,35 +16,6 @@ class RAWS::S3::ACL
     end
   end
 
-  class Grants < Array
-    def initialize(grants)
-      super()
-      grants.each do |grant|
-        grantee, permission = grant['Grantee'], grant['Permission']
-        if id = grantee['ID']
-          push ID.new(permission, id, grantee['DisplayName'])
-        elsif email = grantee['EmailAddress']
-          push Email.new(permission, email)
-        else
-          case grantee['URI']
-          when 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
-            push Group.new(permission)
-          when 'http://acs.amazonaws.com/groups/global/AllUsers'
-            push Anonymouse.new(permission)
-          end
-        end
-      end
-    end
-
-    def to_xml
-      '<AccessControlList>' <<
-        map do |grant|
-          grant.to_xml
-        end.join <<
-      '</AccessControlList>'
-    end
-  end
-
   class Grant
     attr_accessor :permission
 
@@ -99,9 +70,9 @@ class RAWS::S3::ACL
   end
 
   class Group < Grant
-    def initialize(permission)
+    def initialize(permission, group=nil)
       super(permission)
-      @uri = 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+      @group = (group || self.class.name.split('::').last)
     end
 
     def to_xml
@@ -109,17 +80,43 @@ class RAWS::S3::ACL
         '<Grantee' <<
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
         ' xsi:type="Group">' <<
-          "<URI>#{@uri}</URI>" <<
+          "<URI>http://acs.amazonaws.com/groups/global/#{@group}</URI>" <<
         '</Grantee>' <<
         super <<
       '</Grant>'
     end
   end
 
-  class Anonymouse < Group
-    def initialize(permission)
-      super(permission)
-      @uri = 'http://acs.amazonaws.com/groups/global/AllUsers'
+  class AuthenticatedUsers < Group; end
+
+  class AllUsers < Group; end
+
+  class Grants < Array
+    def initialize(grants)
+      super()
+      grants.each do |grant|
+        grantee, permission = grant['Grantee'], grant['Permission']
+        if id = grantee['ID']
+          push ID.new(permission, id, grantee['DisplayName'])
+        elsif email = grantee['EmailAddress']
+          push Email.new(permission, email)
+        else
+          case grantee['URI']
+          when 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
+            push AuthenticatedUsers.new(permission)
+          when 'http://acs.amazonaws.com/groups/global/AllUsers'
+            push AllUsers.new(permission)
+          end
+        end
+      end
+    end
+
+    def to_xml
+      '<AccessControlList>' <<
+        map do |grant|
+          grant.to_xml
+        end.join <<
+      '</AccessControlList>'
     end
   end
 
