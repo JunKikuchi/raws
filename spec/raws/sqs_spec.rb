@@ -133,7 +133,7 @@ describe RAWS::SQS do
 
     it 'change_message_visibility' do
       5.times do |i|
-        p i
+        #p i
         @queue.receive.each do |msg|
           msg.delete
         end

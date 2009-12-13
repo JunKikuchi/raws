@@ -1,5 +1,6 @@
 class RAWS::SQS
   autoload :Adapter, 'raws/sqs/adapter'
+  autoload :Model, 'raws/sqs/model'
 
   class << self
     include Enumerable
@@ -11,16 +12,21 @@ class RAWS::SQS
     end
 
     def queue_url(queue_name)
-      data = Adapter.list_queues(
-        queue_name
-      )['ListQueuesResponse']['ListQueuesResult']
+      @cache_url ||= {}
+      if url = @cache_url[queue_name]
+        return url
+      else
+        data = Adapter.list_queues(
+          queue_name
+        )['ListQueuesResponse']['ListQueuesResult']
 
-      data['QueueUrl'].each do |url|
-        _queue_name = URI.parse(url).path.split('/').last
-        if _queue_name == queue_name
-          return url
-        end
-      end unless data.empty?
+        data['QueueUrl'].each do |url|
+          if URI.parse(url).path.split('/').last == queue_name
+            @cache_url[queue_name] = url
+            return url
+          end
+        end unless data.empty?
+      end
     end
 
     def create_queue(queue_name, timeout=nil)
@@ -52,7 +58,8 @@ class RAWS::SQS
     end
 
     def [](queue_name)
-      if url = queue_url(queue_name)
+      @cache ||= {}
+      @cache[queue_name] ||= if url = queue_url(queue_name)
         self.new(queue_url(queue_name))
       end
     end
