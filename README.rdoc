@@ -137,6 +137,26 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
       end
     end
   end
+
+  acl = RAWS::S3['test-bucket'].acl
+  p [acl.owner.id, acl.owner.name]
+  acl.grants.each do |grant|
+    p [grant.permission, grant.class.name]
+  end
+
+  acl = RAWS::S3['test-bucket'].acl('helloworld')
+  p [acl.owner.id, acl.owner.name]
+  acl.grants.each do |grant|
+    p [grant.permission, grant.class.name]
+  end
+
+  acl.grants.delete_if do |grant|
+    grant.is_a? RAWS::S3::ACL::AllUsers
+  end
+  acl.save
+
+  acl.grants << RAWS::S3::ACL::AllUsers.new('READ')
+  acl.save
   
   RAWS::S3.delete_bucket('test-bucket')
 
@@ -175,6 +195,26 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
       print chunk
     end
   end
+
+  acl = Foo.acl
+  p [acl.owner.id, acl.owner.name]
+  acl.grants.each do |grant|
+    p [grant.permission, grant.class.name]
+  end
+
+  acl = foo.acl
+  p [acl.owner.id, acl.owner.name]
+  acl.grants.each do |grant|
+    p [grant.permission, grant.class.name]
+  end
+
+  acl.grants.delete_if do |grant|
+    grant.is_a? RAWS::S3::ACL::AllUsers
+  end
+  acl.save
+
+  acl.grants << RAWS::S3::ACL::AllUsers.new('READ')
+  acl.save
   
   Foo.delete_bucket
 
