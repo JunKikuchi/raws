@@ -31,7 +31,7 @@ class RAWS::S3::ACL
   class ID < Grant
     attr_accessor :id, :name
 
-    def initialize(permission, id, name=nil)
+    def initialize(id, permission, name=nil)
       super(permission)
       @id, @name = id, name
     end
@@ -42,7 +42,7 @@ class RAWS::S3::ACL
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
         ' xsi:type="CanonicalUser">' <<
           "<ID>#{@id}</ID>" <<
-          "<DisplayName>#{@name}</DisplayName>" <<
+          (@name ? "<DisplayName>#{@name}</DisplayName>" : '') <<
         '</Grantee>' <<
         super <<
       '</Grant>'
@@ -52,7 +52,7 @@ class RAWS::S3::ACL
   class Email < Grant
     attr_accessor :email
 
-    def initialize(permission, email)
+    def initialize(email, permission)
       super(permission)
       @email = email
     end
@@ -70,17 +70,14 @@ class RAWS::S3::ACL
   end
 
   class Group < Grant
-    def initialize(permission, group=nil)
-      super(permission)
-      @group = (group || self.class.name.split('::').last)
-    end
-
     def to_xml
       '<Grant>' <<
         '<Grantee' <<
         ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' <<
         ' xsi:type="Group">' <<
-          "<URI>http://acs.amazonaws.com/groups/global/#{@group}</URI>" <<
+          "<URI>http://acs.amazonaws.com/groups/global/#{
+            self.class.name.split('::').last
+          }</URI>" <<
         '</Grantee>' <<
         super <<
       '</Grant>'
@@ -97,9 +94,9 @@ class RAWS::S3::ACL
       grants.each do |grant|
         grantee, permission = grant['Grantee'], grant['Permission']
         if id = grantee['ID']
-          push ID.new(permission, id, grantee['DisplayName'])
+          push ID.new(id, permission, grantee['DisplayName'])
         elsif email = grantee['EmailAddress']
-          push Email.new(permission, email)
+          push Email.new(email, permission)
         else
           case grantee['URI']
           when 'http://acs.amazonaws.com/groups/global/AuthenticatedUsers'
@@ -134,7 +131,7 @@ class RAWS::S3::ACL
   def reload
     doc = RAWS::S3::Adapter.get_acl(@bucket_name, @key).doc
     acp = doc['AccessControlPolicy']
-    @owner = Owner.new(acp['Owner'])
+    @owner  = Owner.new(acp['Owner'])
     @grants = Grants.new(acp['AccessControlList']['Grant'])
   end
 
