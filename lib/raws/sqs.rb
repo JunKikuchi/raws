@@ -12,9 +12,8 @@ class RAWS::SQS
     end
 
     def queue_url(queue_name)
-      @cache_url ||= {}
-      if url = @cache_url[queue_name]
-        return url
+      if URI.parse(queue_name).scheme
+        queue_name
       else
         data = Adapter.list_queues(
           queue_name
@@ -22,7 +21,6 @@ class RAWS::SQS
 
         data['QueueUrl'].each do |url|
           if URI.parse(url).path.split('/').last == queue_name
-            @cache_url[queue_name] = url
             return url
           end
         end unless data.empty?
@@ -30,16 +28,15 @@ class RAWS::SQS
     end
 
     def create_queue(queue_name, timeout=nil)
-      self.new(
+      self.new\
         Adapter.create_queue(
           queue_name,
           timeout
         )['CreateQueueResponse']['CreateQueueResult']['QueueUrl']
-      )
     end
 
-    def delete_queue(queue_url)
-      Adapter.delete_queue(queue_url)
+    def delete_queue(queue_name)
+      Adapter.delete_queue queue_url(queue_name)
     end
 
     def list(prefix=nil)
@@ -58,50 +55,47 @@ class RAWS::SQS
     end
 
     def [](queue_name)
-      @cache ||= {}
-      @cache[queue_name] ||= if url = queue_url(queue_name)
-        self.new(queue_url(queue_name))
-      end
+      self.new(queue_url(queue_name))
     end
 
-    def get_attrs(queue_url, *attrs)
+    def get_attrs(queue_name, *attrs)
       Adapter.get_queue_attributes(
-        queue_url,
+        queue_url(queue_name),
         *attrs
       )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
     end
 
-    def set_attrs(queue_url, attrs={})
-      Adapter.set_queue_attributes(queue_url, attrs)
+    def set_attrs(queue_name, attrs={})
+      Adapter.set_queue_attributes queue_url(queue_name), attrs
     end
 
-    def send(queue_url, msg)
-      Adapter.send_message(queue_url, msg)
+    def send(queue_name, msg)
+      Adapter.send_message queue_url(queue_name), msg
     end
 
-    def receive(queue_url, params={}, *attrs)
+    def receive(queue_name, params={}, *attrs)
       Adapter.receive_message(
-        queue_url,
+        queue_url(queue_name),
         params[:limit],
         params[:timeout],
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
 
-    def change_message_visibility(queue_url, handle, timeout)
-      Adapter.change_message_visibility(queue_url, handle, timeout)
+    def change_message_visibility(queue_name, handle, timeout)
+      Adapter.change_message_visibility queue_url(queue_name), handle, timeout
     end
 
-    def delete_message(queue_url, handle)
-      Adapter.delete_message(queue_url, handle)
+    def delete_message(queue_name, handle)
+      Adapter.delete_message queue_url(queue_name), handle
     end
 
-    def add_permission(queue_url, label, permission)
-      Adapter.add_permission(queue_url, label, permission)
+    def add_permission(queue_name, label, permission)
+      Adapter.add_permission queue_url(queue_name), label, permission
     end
 
-    def remove_permission(queue_url, label)
-      Adapter.remove_permission(queue_url, label)
+    def remove_permission(queue_name, label)
+      Adapter.remove_permission queue_url(queue_name), label
     end
   end
 

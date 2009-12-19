@@ -15,38 +15,15 @@ module RAWS::SQS::Model
     end
 
     def send(model)
-      queue.send(model.encode)
+      queue.send model
     end
 
-    def receive
-      queue.receive.map do |message|
-        self.new(message)
-      end
+    def receive(params={}, *attrs)
+      queue.receive params, *attrs
     end
   end
 
   module InstanceMethods
-    attr_reader :message
-
-    def initialize(message=nil)
-      @message = message
-      decode(message)
-    end
-
-    def encode
-      ''
-    end
-
-    def decode(message)
-    end
-
-    def send
-      self.class.send(self)
-    end
-
-    def delete
-      @message && @message.delete
-    end
   end
 
   def self.included(mod)
