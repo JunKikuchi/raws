@@ -19,7 +19,7 @@ module RAWS::S3::Model
 
     def find(key, header={})
       begin
-        self.new(key, RAWS::S3.head(self.bucket_name, key))
+        self.new(key)
       rescue RAWS::HTTP::Error => e
         if e.response.code == 404
           nil
@@ -40,7 +40,7 @@ module RAWS::S3::Model
     def initialize(key, header=nil)
       @key = key
       @header = header
-      @metadata = RAWS::S3::Metadata.new(@header || {})
+      @metadata = RAWS::S3::Metadata.new(self.header || {})
       @acl = nil
       after_initialize
     end
