@@ -34,6 +34,10 @@ module RAWS::SDB::Model
       end
     end
 
+    def batch_put(items={}, replaces={})
+      RAWS::SDB[domain_name].batch_put(items, replaces)
+    end
+
     def create_id
       [
         UUIDTools::UUID.random_create.raw
