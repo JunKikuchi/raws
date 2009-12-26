@@ -68,7 +68,7 @@ class RAWS::SDB::Select
       'select',
       @output_list,
       'from',
-      ::RAWS::SDB::Adapter.quote(@domain)
+      "`#{::RAWS::SDB::Adapter.quote(@domain)}`"
     ]
 
     s.push('where',    @condition) if @condition

@@ -8,7 +8,7 @@ module RAWS::SDB::Model
     end
 
     def attr_filter(val)
-      @model.new(val.last, val.first)
+      @model.new(val.last, val.first, true)
     end
   end
 
@@ -30,12 +30,14 @@ module RAWS::SDB::Model
 
     def find(id)
       if attrs = RAWS::SDB[domain_name].get(id)
-        self.new(attrs, id)
+        self.new(attrs, id, true)
       end
     end
 
-    def generate_id
-      UUIDTools::UUID.random_create
+    def create_id
+      [
+        UUIDTools::UUID.random_create.raw
+      ].pack('m').sub(/==\n$/, '').tr('+/', '-_')
     end
 
     def sdb_reader(*names)
@@ -65,11 +67,20 @@ module RAWS::SDB::Model
   end
 
   module InstanceMethods
-    attr_reader :id, :values
+    attr_accessor :id
+    attr_reader :values
 
-    def initialize(values={}, id=nil)
-      @id, @values = id, values
+    def initialize(values={}, id=nil, exists=false)
+      @id, @values, @exists = id, values, exists
       after_initialize
+    end
+
+    def create_id
+      self.class.create_id
+    end
+
+    def exists?
+      @exists
     end
 
     def [](key)
@@ -83,19 +94,21 @@ module RAWS::SDB::Model
     def delete
       before_delete
       RAWS::SDB[self.class.domain_name].delete(id) if id
+      @exists = false
       after_delete
     end
 
     def save
       before_save
-      if id
+      if exists?
         before_update
         RAWS::SDB[self.class.domain_name].put(id, values, *values.keys)
         after_update
       else
         before_insert
-        @id = self.class.generate_id
+        @id ||= create_id
         RAWS::SDB[self.class.domain_name].put(id, values, *values.keys)
+        @exists = true
         after_insert
       end
       after_save
