@@ -12,14 +12,14 @@ module RAWS::S3::Model
 
     def filter(query={})
       RAWS::S3.filter(self.bucket_name, query).map do |val|
-        self.new(val['Key'])
+        self.new val['Key'], {}, true
       end
     end
     alias :all :filter
 
     def find(key, header={})
       begin
-        self.new(key)
+        self.new key, {}, true
       rescue RAWS::HTTP::Error => e
         if e.response.code == 404
           nil
@@ -35,18 +35,34 @@ module RAWS::S3::Model
   end
 
   module InstanceMethods
-    attr_reader :key, :metadata
+    attr_reader :key
 
-    def initialize(key, header=nil)
-      @key = key
-      @header = header
-      @metadata = RAWS::S3::Metadata.new(self.header || {})
-      @acl = nil
+    def initialize(key, header={}, exists=false)
+      @key, @exists = key, exists
+      @header = RAWS::S3::Header.new(self.class.bucket_name, key, header)
+      @metadata, @acl = nil, nil
       after_initialize
     end
 
+    def exists?
+      @exists
+    end
+
     def header
-      @header ||= RAWS::S3.head(self.class.bucket_name, @key)
+      begin
+        exists? && @header.reload
+      rescue RAWS::HTTP::Error => e
+        if e.response.code == 404
+          @exists = false
+        else
+          raise
+        end
+      end
+      @header
+    end
+
+    def metadata
+      @metadata ||= RAWS::S3::Metadata.new(header)
     end
 
     def acl
@@ -55,6 +71,7 @@ module RAWS::S3::Model
 
     def delete
       RAWS::S3.delete(self.class.bucket_name, @key)
+      @exists = false
     end
 
     def receive(header={}, &block)
@@ -65,19 +82,21 @@ module RAWS::S3::Model
       ) do |request|
         response = request.send
         response.receive(&block)
-        @metadata.decode(response.header)
+        metadata.decode(response.header)
         response
       end
     end
 
     def send(header={}, &block)
-      RAWS::S3.put(
+      ret = RAWS::S3.put(
         self.class.bucket_name,
         @key,
-        @metadata.encode.merge!(header)
+        metadata.encode.merge!(header)
       ) do |request|
         request.send(&block)
       end
+      @exists = true
+      ret
     end
 
     def after_initialize; end
