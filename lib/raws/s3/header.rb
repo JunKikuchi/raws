@@ -5,7 +5,7 @@ class RAWS::S3::Header < SimpleDelegator
 
   def initialize(bucket_name, key, header=nil)
     @bucket_name, @key = bucket_name, key
-    super(header ? header : RAWS::S3::Adapter.head_object(@bucket_name, @key).header)
+    super(header || RAWS::S3::Adapter.head_object(@bucket_name, @key).header)
   end
 
   def reload
