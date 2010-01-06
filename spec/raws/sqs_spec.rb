@@ -29,7 +29,6 @@ describe RAWS::SQS do
         delete_queue
         list
         queues
-        each
         []
         get_attrs
         set_attrs
