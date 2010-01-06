@@ -14,7 +14,9 @@ class RAWS::SQS
       if URI.parse(queue_name).scheme
         queue_name
       else
-        list(queue_name).each do |url|
+        list(queue_name).map do |sqs|
+          sqs.queue_url
+        end.each do |url|
           return url if URI.parse(url).path.split('/').last == queue_name
         end
       end
@@ -46,28 +48,30 @@ class RAWS::SQS
       self.new(queue_url(queue_name))
     end
 
-    def get_attrs(queue_name, *attrs)
+    def get_queue_attributes(queue_name, *attrs)
       Adapter.get_queue_attributes(
         queue_url(queue_name),
         *attrs
       )['GetQueueAttributesResponse']['GetQueueAttributesResult']['Attribute']
     end
 
-    def set_attrs(queue_name, attrs={})
+    def set_queue_attributes(queue_name, attrs={})
       Adapter.set_queue_attributes queue_url(queue_name), attrs
     end
 
-    def send(queue_name, msg)
+    def send_message(queue_name, msg)
       Adapter.send_message queue_url(queue_name), msg
     end
+    alias :send :send_message
 
-    def receive(queue_name, params={}, *attrs)
+    def receive_message(queue_name, params={}, *attrs)
       Adapter.receive_message(
         queue_url(queue_name),
         params,
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
+    alias :receive :receive_message
 
     def change_message_visibility(queue_name, receipt_handle, visibility_timeout)
       Adapter.change_message_visibility(
@@ -102,23 +106,25 @@ class RAWS::SQS
     self.class.delete_queue queue_url
   end
 
-  def get_attrs(*attrs)
-    self.class.get_attrs queue_url, *attrs
+  def get_queue_attributes(*attrs)
+    self.class.get_queue_attributes queue_url, *attrs
   end
 
-  def set_attrs(attrs={})
-    self.class.set_attrs queue_url, attrs
+  def set_queue_attributes(attrs={})
+    self.class.set_queue_attributes queue_url, attrs
   end
 
-  def send(msg)
-    self.class.send queue_url, msg
+  def send_message(msg)
+    self.class.send_message queue_url, msg
   end
+  alias :send :send_message
 
-  def receive(params={}, *attrs)
-    self.class.receive(queue_url, params, *attrs).map do |val|
+  def receive_message(params={}, *attrs)
+    self.class.receive_message(queue_url, params, *attrs).map do |val|
       Message.new self, val
     end
   end
+  alias :receive :receive_message
 
   def change_message_visibility(receipt_handle, visibility_timeout)
     self.class.change_message_visibility(

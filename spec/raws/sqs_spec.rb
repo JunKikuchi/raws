@@ -30,10 +30,10 @@ describe RAWS::SQS do
         list
         queues
         []
-        get_attrs
-        set_attrs
-        send
-        receive
+        get_queue_attributes
+        set_queue_attributes
+        send_message
+        receive_message
       '.each do |val|
         RAWS::SQS.should respond_to val.to_sym
       end
@@ -45,12 +45,6 @@ describe RAWS::SQS do
 
     it 'queues' do
       RAWS::SQS.queues.each do |queue|
-        queue.should be_kind_of RAWS::SQS
-      end
-    end
-
-    it 'each' do
-      RAWS::SQS.each do |queue|
         queue.should be_kind_of RAWS::SQS
       end
     end
@@ -68,10 +62,10 @@ describe RAWS::SQS do
     it 'methods' do
       %w'
         delete_queue
-        get_attrs
-        set_attrs
-        send
-        receive
+        get_queue_attributes
+        set_queue_attributes
+        send_message
+        receive_message
         delete_message
         add_permission
         remove_permission
@@ -80,8 +74,8 @@ describe RAWS::SQS do
       end
     end
 
-    it 'get_attrs' do
-      attrs = @queue.get_attrs
+    it 'get_queue_attributes' do
+      attrs = @queue.get_queue_attributes
       %w'
         ApproximateNumberOfMessages
         LastModifiedTimestamp
@@ -91,23 +85,23 @@ describe RAWS::SQS do
         attrs.should have_key val
       end
 
-      attrs = @queue.get_attrs 'VisibilityTimeout'
+      attrs = @queue.get_queue_attributes 'VisibilityTimeout'
       attrs.should have_key 'VisibilityTimeout'
     end
 
-    it 'set_attrs' do
-      @queue.set_attrs 'VisibilityTimeout' => 60
+    it 'set_queue_attributes' do
+      @queue.set_queue_attributes 'VisibilityTimeout' => 60
       5.times do
-        attrs = @queue.get_attrs 'VisibilityTimeout'
+        attrs = @queue.get_queue_attributes 'VisibilityTimeout'
         if attrs['VisibilityTimeout'] == 60
           attrs['VisibilityTimeout'].should == 60
           break
         end
       end
 
-      @queue.set_attrs 'VisibilityTimeout' => 30
+      @queue.set_queue_attributes 'VisibilityTimeout' => 30
       5.times do
-        attrs = @queue.get_attrs 'VisibilityTimeout'
+        attrs = @queue.get_queue_attributes 'VisibilityTimeout'
         if attrs['VisibilityTimeout'] == 30
           attrs['VisibilityTimeout'].should == 30
           break
@@ -115,14 +109,14 @@ describe RAWS::SQS do
       end
     end
 
-    it 'send, receive & delete' do
+    it 'send_message, receive_message & delete_message' do
       5.times do |i|
-        @queue.send(i)
+        @queue.send_message(i)
       end
 
       i = 1
       while i <= 5 
-        @queue.receive.each do |msg|
+        @queue.receive_message.each do |msg|
           msg.should be_kind_of RAWS::SQS::Message
           msg.delete
           i += 1
@@ -133,7 +127,7 @@ describe RAWS::SQS do
     it 'change_message_visibility' do
       5.times do |i|
         #p i
-        @queue.receive.each do |msg|
+        @queue.receive_message.each do |msg|
           msg.delete
         end
         sleep 5
@@ -142,7 +136,7 @@ describe RAWS::SQS do
 
       msg_id, time = nil, nil
       loop do
-        if msg = @queue.receive.first
+        if msg = @queue.receive_message.first
           #p Time.now
           #p msg
           unless time
@@ -155,7 +149,7 @@ describe RAWS::SQS do
               break
             end
           end
-          msg.visibility = 10
+          msg.change_visibility(10)
         end
         #p 'sleep'
         sleep 5
