@@ -1,6 +1,7 @@
 class RAWS::SQS
   autoload :Adapter, 'raws/sqs/adapter'
-  autoload :Model, 'raws/sqs/model'
+  autoload :Message, 'raws/sqs/message'
+  autoload :Model,   'raws/sqs/model'
 
   class << self
     include Enumerable
@@ -15,15 +16,9 @@ class RAWS::SQS
       if URI.parse(queue_name).scheme
         queue_name
       else
-        data = Adapter.list_queues(
-          queue_name
-        )['ListQueuesResponse']['ListQueuesResult']
-
-        data['QueueUrl'].each do |url|
-          if URI.parse(url).path.split('/').last == queue_name
-            return url
-          end
-        end unless data.empty?
+        list(queue_name).each do |url|
+          return url if URI.parse(url).path.split('/').last == queue_name
+        end
       end
     end
 
@@ -40,8 +35,9 @@ class RAWS::SQS
     end
 
     def list(prefix=nil)
-      doc = Adapter.list_queues(prefix)
-      doc['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
+      Adapter.list_queues(
+        prefix
+      )['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
     end
 
     def queues(prefix=nil)
@@ -99,27 +95,6 @@ class RAWS::SQS
     end
   end
 
-  class Message
-    attr_reader :queue
-    attr_reader :data
-
-    def initialize(queue, data)
-      @queue, @data = queue, data
-    end
-
-    def body
-      data['Body']
-    end
-
-    def visibility=(timeout)
-      queue.change_message_visibility data['ReceiptHandle'], timeout
-    end
-
-    def delete
-      queue.delete_message data['ReceiptHandle']
-    end
-  end
-
   attr_reader :queue_url
   attr_reader :queue_name
 
@@ -129,41 +104,41 @@ class RAWS::SQS
   end
 
   def delete_queue
-    self.class.delete_queue(queue_url)
+    self.class.delete_queue queue_url
   end
 
   def get_attrs(*attrs)
-    self.class.get_attrs(queue_url, *attrs)
+    self.class.get_attrs queue_url, *attrs
   end
 
   def set_attrs(attrs={})
-    self.class.set_attrs(queue_url, attrs)
+    self.class.set_attrs queue_url, attrs
   end
 
   def send(msg)
-    self.class.send(queue_url, msg)
+    self.class.send queue_url, msg
   end
 
   def receive(params={}, *attrs)
     self.class.receive(queue_url, params, *attrs).map do |val|
-      Message.new(self, val)
+      Message.new self, val
     end
   end
 
   def change_message_visibility(handle, timeout)
-    self.class.change_message_visibility(queue_url, handle, timeout)
+    self.class.change_message_visibility queue_url, handle, timeout
   end
 
   def delete_message(handle)
-    self.class.delete_message(queue_url, handle)
+    self.class.delete_message queue_url, handle
   end
 
   def add_permission(label, permission)
-    self.class.add_permission(queue_url, label, permission)
+    self.class.add_permission queue_url, label, permission
   end
 
   def remove_permission(label)
-    self.class.remove_permission(queue_url, label)
+    self.class.remove_permission queue_url, label
   end
 
   def <=>(a)
