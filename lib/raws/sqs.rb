@@ -4,8 +4,6 @@ class RAWS::SQS
   autoload :Model,   'raws/sqs/model'
 
   class << self
-    include Enumerable
-
     attr_writer :http
 
     def http
@@ -34,21 +32,15 @@ class RAWS::SQS
       Adapter.delete_queue queue_url(queue_name)
     end
 
-    def list(prefix=nil)
-      Adapter.list_queues(
-        prefix
-      )['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
-    end
-
     def queues(prefix=nil)
-      list.map do |val|
+      (
+        Adapter.list_queues(prefix)\
+          ['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
+      ).map do |val|
         self.new(val)
       end
     end
-
-    def each(&block)
-      queues.each(&block)
-    end
+    alias :list :queues
 
     def [](queue_name)
       self.new(queue_url(queue_name))
@@ -139,9 +131,5 @@ class RAWS::SQS
 
   def remove_permission(label)
     self.class.remove_permission queue_url, label
-  end
-
-  def <=>(a)
-    queue_name <=> a.queue_name
   end
 end
