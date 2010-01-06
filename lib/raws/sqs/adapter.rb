@@ -139,7 +139,7 @@ class RAWS::SQS::Adapter
       )
     end
 
-    def set_queue_attributes(queue_url, attrs={})
+    def set_queue_attributes(queue_url, attrs)
       params = {'Action' => 'SetQueueAttributes'}
       params.merge!(pack_nv_attrs(attrs))
 

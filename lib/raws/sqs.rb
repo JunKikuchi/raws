@@ -74,7 +74,7 @@ class RAWS::SQS
     #
     # * +attrs+ - {_AttributeName_ => _AttributeValue_}
     #   * AttributeName - VisibilityTimeout, Policy
-    def set_queue_attributes(queue_name_or_url, attrs={})
+    def set_queue_attributes(queue_name_or_url, attrs)
       Adapter.set_queue_attributes queue_url(queue_name_or_url), attrs
     end
 
@@ -163,7 +163,7 @@ class RAWS::SQS
   #
   # * +attrs+ - {_AttributeName_ => _AttributeValue_}
   #   * AttributeName - VisibilityTimeout, Policy
-  def set_queue_attributes(attrs={})
+  def set_queue_attributes(attrs)
     self.class.set_queue_attributes queue_url, attrs
   end
 
