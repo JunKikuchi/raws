@@ -20,11 +20,11 @@ class RAWS::SQS
       end
     end
 
-    def create_queue(queue_name, timeout=nil)
+    def create_queue(queue_name, default_visibility_timeout=nil)
       self.new\
         Adapter.create_queue(
           queue_name,
-          timeout
+          default_visibility_timeout
         )['CreateQueueResponse']['CreateQueueResult']['QueueUrl']
     end
 
@@ -64,18 +64,21 @@ class RAWS::SQS
     def receive(queue_name, params={}, *attrs)
       Adapter.receive_message(
         queue_url(queue_name),
-        params[:limit],
-        params[:timeout],
+        params,
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
 
-    def change_message_visibility(queue_name, handle, timeout)
-      Adapter.change_message_visibility queue_url(queue_name), handle, timeout
+    def change_message_visibility(queue_name, receipt_handle, visibility_timeout)
+      Adapter.change_message_visibility(
+        queue_url(queue_name),
+        receipt_handle,
+        visibility_timeout
+      )
     end
 
-    def delete_message(queue_name, handle)
-      Adapter.delete_message queue_url(queue_name), handle
+    def delete_message(queue_name, receipt_handle)
+      Adapter.delete_message queue_url(queue_name), receipt_handle
     end
 
     def add_permission(queue_name, label, permission)
@@ -117,12 +120,16 @@ class RAWS::SQS
     end
   end
 
-  def change_message_visibility(handle, timeout)
-    self.class.change_message_visibility queue_url, handle, timeout
+  def change_message_visibility(receipt_handle, visibility_timeout)
+    self.class.change_message_visibility(
+      queue_url,
+      receipt_handle,
+      visibility_timeout
+    )
   end
 
-  def delete_message(handle)
-    self.class.delete_message queue_url, handle
+  def delete_message(receipt_handle)
+    self.class.delete_message queue_url, receipt_handle
   end
 
   def add_permission(label, permission)

@@ -81,12 +81,15 @@ class RAWS::SQS::Adapter
       doc
     end
 
-    def create_queue(queue_name, timeout=nil)
+    def create_queue(queue_name, default_visibility_timeout=nil)
       params = {
         'Action'    => 'CreateQueue',
         'QueueName' => queue_name
       }
-      params['DefaultVisibilityTimeout'] = timeout if timeout
+
+      if default_visibility_timeout
+        params['DefaultVisibilityTimeout'] = default_visibility_timeout
+      end
 
       connect('GET', URI, PARAMS.merge(params))
     end
@@ -137,11 +140,10 @@ class RAWS::SQS::Adapter
       connect('GET', queue_url, PARAMS.merge(params))
     end
 
-    def receive_message(queue_url, limit=nil, timeout=nil, *attrs)
+    def receive_message(queue_url, params={}, *attrs)
       params = {'Action' => 'ReceiveMessage'}
-      params['MaxNumberOfMessages'] = limit   if limit
-      params['VisibilityTimeout']   = timeout if timeout
-      params.merge!(pack_attrs(attrs))
+      params.merge! params
+      params.merge! pack_attrs(attrs)
 
       connect(
         'GET',
@@ -152,11 +154,11 @@ class RAWS::SQS::Adapter
       )
     end
 
-    def change_message_visibility(queue_url, receipt_handle, timeout)
+    def change_message_visibility(queue_url, receipt_handle, visibility_timeout)
       params = {
         'Action'            => 'ChangeMessageVisibility',
         'ReceiptHandle'     => receipt_handle,
-        'VisibilityTimeout' => timeout
+        'VisibilityTimeout' => visibility_timeout
       }
 
       connect('GET', queue_url, PARAMS.merge(params))
