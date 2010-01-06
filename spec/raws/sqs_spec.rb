@@ -27,8 +27,7 @@ describe RAWS::SQS do
         queue_url
         create_queue
         delete_queue
-        list
-        queues
+        list_queues
         []
         get_queue_attributes
         set_queue_attributes
@@ -39,12 +38,8 @@ describe RAWS::SQS do
       end
     end
 
-    it 'list' do
-      RAWS::SQS.list
-    end
-
-    it 'queues' do
-      RAWS::SQS.queues.each do |queue|
+    it 'list_queues' do
+      RAWS::SQS.list_queues.each do |queue|
         queue.should be_kind_of RAWS::SQS
       end
     end

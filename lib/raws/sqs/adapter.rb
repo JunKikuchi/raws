@@ -156,8 +156,7 @@ class RAWS::SQS::Adapter
     end
 
     def receive_message(queue_url, params={}, *attrs)
-      params = {'Action' => 'ReceiveMessage'}
-      params.merge! params
+      params.merge! 'Action' => 'ReceiveMessage'
       params.merge! pack_attrs(attrs)
 
       connect(

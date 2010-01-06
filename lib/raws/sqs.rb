@@ -4,6 +4,8 @@ class RAWS::SQS
   autoload :Model,   'raws/sqs/model'
 
   class << self
+    include Enumerable
+
     attr_writer :http
 
     def http
@@ -15,7 +17,7 @@ class RAWS::SQS
       if URI.parse(queue_name_or_url).scheme
         queue_name_or_url
       else
-        list(queue_name_or_url).map do |sqs|
+        list_queues(queue_name_or_url).map do |sqs|
           sqs.queue_url
         end.each do |url|
           return url if URI.parse(url).path.split('/').last == queue_name_or_url
@@ -38,7 +40,7 @@ class RAWS::SQS
     end
 
     # Returns an array of RAWS::SQS objects.
-    def queues(prefix=nil)
+    def list_queues(prefix=nil)
       (
         Adapter.list_queues(prefix)\
           ['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
@@ -46,7 +48,10 @@ class RAWS::SQS
         self.new(val)
       end
     end
-    alias :list :queues
+
+    def each(prefix=nil, &block)
+      list_queues(prefix).each(&block)
+    end
 
     # Returns the instance of RAWS::SQS.
     def [](queue_name_or_url)
@@ -82,7 +87,6 @@ class RAWS::SQS
     def send_message(queue_name_or_url, msg)
       Adapter.send_message queue_url(queue_name_or_url), msg
     end
-    alias :send :send_message
 
     # Receives one or more messages form the queue.
     # Returns an array of message data.
@@ -93,7 +97,6 @@ class RAWS::SQS
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
-    alias :receive :receive_message
 
     # Changes the message visibility timeout.
     def change_message_visibility(
@@ -212,5 +215,9 @@ class RAWS::SQS
   # Removes the permission.
   def remove_permission(label)
     self.class.remove_permission queue_url, label
+  end
+
+  def <=>(a)
+    queue_name <=> a.queue_name
   end
 end
