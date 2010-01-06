@@ -9,6 +9,9 @@ end
 RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
 RAWS.aws_secret_access_key = AWS_SECRET_ACCESS_KEY
 
-RAWS_SDB_DOMAIN = AWS_SDB_DOMAIN
-RAWS_SQS_QUEUE  = AWS_SQS_QUEUE
-RAWS_S3_BUCKETS = %w'AWS_S3_BUCKET AWS.S3.BUCKET'
+RAWS_SDB_DOMAINS = [__AWS_SDB_DOMAIN__,]
+RAWS_SQS_QUEUE  = __AWS_SQS_QUEUE__
+RAWS_S3_BUCKETS = [
+  # bucket_name, location, acl
+  [__BUCKET_NAME__, nil, nil],
+]
