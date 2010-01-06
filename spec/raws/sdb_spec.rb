@@ -37,17 +37,16 @@ describe RAWS::SDB do
       %w'
         create_domain
         delete_domain
-        metadata
-        list
-        domains
+        domain_metadata
+        list_domains
         each
         []
         select
         all
-        get
-        put
-        batch_put
-        delete
+        get_attributes
+        put_attributes
+        batch_put_attributes
+        delete_attributes
       '.each do |val|
         RAWS::SDB.should respond_to val.to_sym
       end
@@ -59,8 +58,8 @@ describe RAWS::SDB do
     it 'delete_domain' do
     end
 
-    it 'metadata' do
-      data = RAWS::SDB.metadata(@domain_name)
+    it 'domain_metadata' do
+      data = RAWS::SDB.domain_metadata(@domain_name)
       data.should have_key('Timestamp')
       data.should have_key('ItemCount')
       data.should have_key('AttributeValueCount')
@@ -70,25 +69,13 @@ describe RAWS::SDB do
       data.should have_key('AttributeNamesSizeBytes')
     end
 
-    it 'list' do
-      data = RAWS::SDB.list
-      data.should have_key('DomainName')
-
-      data = RAWS::SDB.list(nil, 1)
-      data['DomainName'].should be_kind_of(Array)
-      data['DomainName'].size.should == 1
-      data['DomainName'].first.should be_kind_of(String)
-      data.should have_key('NextToken')
-    end
-
-    it 'domains' do
-      domains = RAWS::SDB.domains
-      domains.should have_key('Domains')
-
-      data = RAWS::SDB.domains(nil, 1)
+    it 'list_domains' do
+      data = RAWS::SDB.list_domains
+      data.should have_key('Domains')
       data['Domains'].should be_kind_of(Array)
+
+      data = RAWS::SDB.list_domains('MaxNumberOfDomains' => 1)
       data['Domains'].size.should == 1
-      data['Domains'].first.should be_kind_of(RAWS::SDB)
       data.should have_key('NextToken')
     end
 
@@ -126,7 +113,7 @@ describe RAWS::SDB do
       end
     end
 
-    it 'get' do
+    it 'get_attributes' do
       RAWS::SDB[@domain_name].get('000').should be_nil
 
       data = RAWS::SDB[@domain_name].get('100')
@@ -139,64 +126,64 @@ describe RAWS::SDB do
       data.should == {'a' => ['10', '20', '30'], 'b' => '20', 'c' => '30'}
     end
 
-    it 'put, get & delete' do
-      RAWS::SDB[@domain_name].put('10', 'a' => [1])
-      RAWS::SDB[@domain_name].put('10', 'a' => 2)
+    it 'put_attributes, get_attributes & delete_attributes' do
+      RAWS::SDB[@domain_name].put_attributes('10', 'a' => [1])
+      RAWS::SDB[@domain_name].put_attributes('10', 'a' => 2)
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('10')
+        data = RAWS::SDB[@domain_name].get_attributes('10')
         if data == {'a' => ['1', '2']}
           data.should == {'a' => ['1', '2']}
           break;
         end
       end
 
-      RAWS::SDB[@domain_name].delete('10')
+      RAWS::SDB[@domain_name].delete_attributes('10')
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('10')
+        data = RAWS::SDB[@domain_name].get_attributes('10')
         unless data
           data.should be_nil
         end
       end
     end
 
-    it 'batch_put & delete' do
-      RAWS::SDB[@domain_name].batch_put(
+    it 'batch_put_attributes & delete_attributes' do
+      RAWS::SDB[@domain_name].batch_put_attributes(
         "1" => {"a"=>["10"]},
         "2" => {"a"=>["20"]},
         "3" => {"a"=>["30"]}
       )
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('1')
+        data = RAWS::SDB[@domain_name].get_attributes('1')
         if data
           data.should == {'a' => '10'}
-          RAWS::SDB[@domain_name].delete('1')
+          RAWS::SDB[@domain_name].delete_attributes('1')
           break
         end
       end
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('2')
+        data = RAWS::SDB[@domain_name].get_attributes('2')
         if data
           data.should == {'a' => '20'}
-          RAWS::SDB[@domain_name].delete('2')
+          RAWS::SDB[@domain_name].delete_attributes('2')
           break
         end
       end
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('3')
+        data = RAWS::SDB[@domain_name].get_attributes('3')
         if data
           data.should == {'a' => '30'}
-          RAWS::SDB[@domain_name].delete('3')
+          RAWS::SDB[@domain_name].delete_attributes('3')
           break
         end
       end
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('1')
+        data = RAWS::SDB[@domain_name].get_attributes('1')
         unless data
           data.should be_nil
           break
@@ -204,7 +191,7 @@ describe RAWS::SDB do
       end
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('2')
+        data = RAWS::SDB[@domain_name].get_attributes('2')
         unless data
           data.should be_nil
           break
@@ -212,7 +199,7 @@ describe RAWS::SDB do
       end
 
       5.times do
-        data = RAWS::SDB[@domain_name].get('3')
+        data = RAWS::SDB[@domain_name].get_attributes('3')
         unless data
           data.should be_nil
           break
@@ -231,12 +218,17 @@ describe RAWS::SDB do
       %w'
         create_domain
         delete_domain
+        domain_metadata
         metadata
         select
         all
+        get_attributes
         get
+        put_attributes
         put
+        batch_put_attributes
         batch_put
+        delete_attributes
         delete
       '.each do |val|
         @sdb.should respond_to val.to_sym

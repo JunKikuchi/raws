@@ -1,3 +1,4 @@
+require 'forwardable'
 require 'uuidtools'
 
 module RAWS::SDB::Model
@@ -13,14 +14,25 @@ module RAWS::SDB::Model
   end
 
   module ClassMethods
+    extend Forwardable
+    def_delegators :domain,
+      :create_domain,
+      :delete_domain,
+      :domain_metadata,
+      :metadata,
+      :get_attributes,
+      :get,
+      :put_attributes,
+      :put,
+      :batch_put_attributes,
+      :batch_put,
+      :delete_attribute,
+      :delete
+
     attr_accessor :domain_name
 
-    def create_domain
-      RAWS::SDB[domain_name].create_domain
-    end
-
-    def delete_domain
-      RAWS::SDB[domain_name].delete_domain
+    def domain
+      RAWS::SDB[domain_name]
     end
 
     def select(&block)
@@ -29,44 +41,15 @@ module RAWS::SDB::Model
     alias :all :select
 
     def find(id)
-      if attrs = RAWS::SDB[domain_name].get(id)
+      if attrs = get_attribute(id)
         self.new(attrs, id, true)
       end
-    end
-
-    def batch_put(items={}, replaces={})
-      RAWS::SDB[domain_name].batch_put(items, replaces)
     end
 
     def create_id
       [
         UUIDTools::UUID.random_create.raw
       ].pack('m').sub(/==\n$/, '').tr('+/', '-_')
-    end
-
-    def sdb_reader(*names)
-      names.each do |name|
-        module_eval %Q{
-          def #{name}
-            self['#{name}']
-          end
-        }
-      end
-    end
-
-    def sdb_writer(*names)
-      names.each do |name|
-        module_eval %Q{
-          def #{name}=(val)
-            self['#{name}'] = val
-          end
-        }
-      end
-    end
-
-    def sdb_accessor(*names)
-      sdb_reader(*names)
-      sdb_writer(*names)
     end
   end
 
@@ -97,7 +80,7 @@ module RAWS::SDB::Model
 
     def delete
       before_delete
-      RAWS::SDB[self.class.domain_name].delete(id) if id
+      self.class.delete_attribute(id) if id
       @exists = false
       after_delete
     end
@@ -106,12 +89,12 @@ module RAWS::SDB::Model
       before_save
       if exists?
         before_update
-        RAWS::SDB[self.class.domain_name].put(id, values, *values.keys)
+        self.class.put_attributes(id, values, *values.keys)
         after_update
       else
         before_insert
         @id ||= create_id
-        RAWS::SDB[self.class.domain_name].put(id, values, *values.keys)
+        self.class.put_attributes(id, values, *values.keys)
         @exists = true
         after_insert
       end
@@ -127,6 +110,15 @@ module RAWS::SDB::Model
     def after_update; end
     def before_insert; end
     def after_insert; end
+
+    def method_missing(_name, *args)
+      name = _name.to_s
+      if md = /(.+)=$/.match(name)
+        self[md[1]] = args.unshift
+      elsif values.key?(name)
+        self[name]
+      end
+    end
   end
 
   def self.included(mod)

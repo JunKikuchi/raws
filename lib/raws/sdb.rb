@@ -20,72 +20,59 @@ class RAWS::SDB
       Adapter.delete_domain(domain_name)
     end
 
-    def metadata(domain_name)
-      doc = Adapter.domain_metadata(domain_name)
-      doc['DomainMetadataResponse']['DomainMetadataResult']
+    def domain_metadata(domain_name)
+      Adapter.domain_metadata(domain_name)\
+        ['DomainMetadataResponse']['DomainMetadataResult']
     end
 
-    def list(next_token=nil, max_num=nil)
-      doc = Adapter.list_domains(next_token, max_num)
-      doc['ListDomainsResponse']['ListDomainsResult']
-    end
+    def list_domains(params={})
+      doc = Adapter.list_domains(params)\
+        ['ListDomainsResponse']['ListDomainsResult']
 
-    def domains(next_token=nil, max_num=nil)
-      data = list(next_token, max_num)
       {
-        'Domains' => (data['DomainName'] || []).map do |val|
-          self.new(val)
-        end,
-        'NextToken' => data['NextToken']
+        'Domains' => (doc['DomainName'] || []).map do |val| self.new(val) end,
+        'NextToken' => doc['NextToken']
       }
     end
 
-    def each(&block)
+    def each(params={}, &block)
       next_token = nil
       begin
-        data = domains(next_token)
+        data = list_domains(params.merge('NextToken' => next_token))
         data['Domains'].each(&block)
       end while next_token = data['NextToken']
     end
 
     def [](domain_name)
-      @cache ||= {}
-      @cache[domain_name] ||= self.new(domain_name)
+      self.new domain_name
     end
 
     def select(expr, params=[], next_token=nil, &block)
       begin
-        data = Adapter.select(
-          expr,
-          params,
-          next_token
-        )['SelectResponse']['SelectResult']
-
+        data = Adapter.select(expr, params, next_token)\
+          ['SelectResponse']['SelectResult']
         data['Item'].each do |val|
-          block.call([val['Name'], val['Attribute']])
+          block.call [val['Name'], val['Attribute']]
         end if data.key? 'Item'
       end while next_token = data['NextToken']
     end
     alias :all :select
 
-    def get(domain_name, item_name, *attrs)
-      Adapter.get_attributes(
-        domain_name,
-        item_name,
-        *attrs
-      )['GetAttributesResponse']['GetAttributesResult']['Attribute']
+    def get_attributes(domain_name, item_name, *attrs)
+      Adapter.get_attributes(domain_name, item_name, *attrs)\
+        ['GetAttributesResponse']['GetAttributesResult']['Attribute']
     end
 
-    def put(domain_name, item_name, attrs={}, *replaces)
-      Adapter.put_attributes(domain_name, item_name, attrs, *replaces)
+    def put_attributes(domain_name, item_name, attrs={}, *replaces)
+      Adapter.put_attributes domain_name, item_name, attrs, *replaces
     end
 
-    def batch_put(domain_name, items={}, replaces={})
-      Adapter.batch_put_attributes(domain_name, items, replaces)
+    def batch_put_attributes(domain_name, items={}, replaces={})
+      Adapter.batch_put_attributes domain_name, items, replaces
     end
 
-    def delete(domain_name, item_name, attrs={})
-      Adapter.delete_attributes(domain_name, item_name, attrs)
+    def delete_attributes(domain_name, item_name, attrs={})
+      Adapter.delete_attributes domain_name, item_name, attrs
     end
   end
 
@@ -103,30 +90,35 @@ class RAWS::SDB
     self.class.delete_domain(domain_name)
   end
 
-  def metadata
-    self.class.metadata(domain_name)
+  def domain_metadata
+    self.class.domain_metadata(domain_name)
   end
+  alias :metadata :domain_metadata
 
   def select(output_list='*', &block)
     Select.new.columns(output_list).from(domain_name, &block)
   end
   alias :all :select
 
-  def get(item_name, *attrs)
-    self.class.get(domain_name, item_name, *attrs)
+  def get_attributes(item_name, *attrs)
+    self.class.get_attributes domain_name, item_name, *attrs
   end
+  alias :get :get_attributes
 
-  def put(item_name, attrs={}, *replaces)
-    self.class.put(domain_name, item_name, attrs, *replaces)
+  def put_attributes(item_name, attrs, *replaces)
+    self.class.put_attributes domain_name, item_name, attrs, *replaces
   end
+  alias :put :put_attributes
 
-  def batch_put(items={}, replaces={})
-    self.class.batch_put(domain_name, items, replaces)
+  def batch_put_attributes(items, replaces={})
+    self.class.batch_put_attributes domain_name, items, replaces
   end
+  alias :batch_put :batch_put_attributes
 
-  def delete(item_name, attrs={})
-    self.class.delete(domain_name, item_name, attrs)
+  def delete_attributes(item_name, attrs={})
+    self.class.delete_attributes domain_name, item_name, attrs
   end
+  alias :delete :delete_attributes
 
   def <=>(a)
     domain_name <=> a.domain_name

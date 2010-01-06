@@ -97,10 +97,8 @@ class RAWS::SDB::Adapter
       connect('GET', URI, PARAMS.merge(params))
     end
 
-    def list_domains(next_token=nil, max_num=nil, &block)
-      params = {'Action' => 'ListDomains'}
-      params['NextToken']          = next_token if next_token
-      params['MaxNumberOfDomains'] = max_num    if max_num
+    def list_domains(params={}, &block)
+      params.merge!('Action' => 'ListDomains')
 
       connect('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
     end
