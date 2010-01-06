@@ -44,6 +44,21 @@ class RAWS::SQS::Adapter
       params
     end
 
+    def pack_permission(params)
+      ret = {}
+
+      i = 1
+      params.each do |id, permissions|
+        permissions.each do |permission|
+          ret["AWSAccountId.#{i}"] = id
+          ret["ActionName.#{i}"]   = permission
+          i += 1
+        end
+      end
+
+      ret
+    end
+
     def sign(method, base_uri, params)
       path = {
         'AWSAccessKeyId'   => RAWS.aws_access_key_id,
@@ -173,27 +188,12 @@ class RAWS::SQS::Adapter
       connect('GET', queue_url, PARAMS.merge(params))
     end
 
-    def pack_permission(params)
-      ret = {}
-
-      i = 1
-      params.each do |id, permissions|
-        permissions.each do |permission|
-          ret["AWSAccountId.#{i}"] = id
-          ret["ActionName.#{i}"]   = permission
-          i += 1
-        end
-      end
-
-      ret
-    end
-
-    def add_permission(queue_url, label, permission)
+    def add_permission(queue_url, label, permissions)
       params = {
         'Action' => 'AddPermission',
         'Label'  => label
       }
-      params.merge!(pack_permission(permission))
+      params.merge!(pack_permission(permissions))
 
       connect('GET', queue_url, PARAMS.merge(params))
     end
