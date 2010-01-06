@@ -72,8 +72,6 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   class Foo
     include RAWS::SDB::Model
     self.domain_name = 'test_domain'
-
-    sdb_accessor 'a', 'b'
   end
   
   Foo.create_domain
@@ -91,7 +89,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   foo3 = Foo.new
   foo3.a = ['30a', '30b']
   foo3.b = '300'
-  foo3['c'] = '3000'
+  foo3.c = '3000'
   foo3.save
   
   Foo.all.each do |a|
@@ -99,7 +97,7 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
   end
   
   Foo.all.filter('a = ?', '10').each do |a|
-    p [a.a, a.b, a['c']]
+    p [a.a, a.b, a.c]
     a.delete
   end
   
