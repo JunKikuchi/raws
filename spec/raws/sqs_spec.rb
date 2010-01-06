@@ -132,7 +132,7 @@ describe RAWS::SQS do
         end
         sleep 5
       end
-      @queue.send('change message visibility')
+      @queue.send_message('change message visibility')
 
       msg_id, time = nil, nil
       loop do
