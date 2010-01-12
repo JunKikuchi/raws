@@ -19,12 +19,15 @@ module RAWS
             end
           end
 
-          if tag.child.is_a? ::Nokogiri::XML::Text
+          case tag.child
+          when ::Nokogiri::XML::Text
             if ret.key? name
               ret[name] << tag.content
             else
               ret[name] = tag.content
             end
+          when nil
+            ret[name] = nil
           else
             if ret.key? name
               ret[name] << {}

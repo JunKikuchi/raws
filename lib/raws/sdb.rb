@@ -47,14 +47,15 @@ class RAWS::SDB
       self.new domain_name
     end
 
-    def select(expr, params=[], next_token=nil, &block)
+    def select(expr, params=[], &block)
+      next_token = nil
       begin
-        data = Adapter.select(expr, params, next_token)\
+        ret = Adapter.select(expr, params, next_token)\
           ['SelectResponse']['SelectResult']
-        data['Item'].each do |val|
+        ret['Item'].each do |val|
           block.call [val['Name'], val['Attribute']]
-        end if data.key? 'Item'
-      end while next_token = data['NextToken']
+        end if ret.key? 'Item'
+      end while next_token = ret['NextToken']
     end
     alias :all :select
 

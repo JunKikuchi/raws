@@ -22,7 +22,7 @@ describe RAWS::S3::Model do
 
   describe 'object' do
     before do
-      @model = S3Object.all.first
+      @model = S3Object.first
     end
 
     it 'methods' do
@@ -37,4 +37,3 @@ describe RAWS::S3::Model do
     end
   end
 end
-

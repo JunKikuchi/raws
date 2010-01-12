@@ -124,11 +124,11 @@ class RAWS::S3::Adapter
       end
     end
 
-    def get_bucket(bucket_name, params={})
+    def get_bucket(bucket_name, query={})
       connect(
         'GET', 
         :bucket => bucket_name,
-        :query  => params
+        :query  => query
       ) do |request|
         response = request.send
         response.parse :multiple => ['Contents']

@@ -8,22 +8,23 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
   describe RAWS::S3 do
     describe 'class' do
       before(:all) do
-        #response = RAWS::S3.create_bucket(bucket_name, location)
-        #response.should be_kind_of(RAWS::HTTP::Response)
-
+=begin
+        response = RAWS::S3.create_bucket(bucket_name, location)
+        response.should be_kind_of(RAWS::HTTP::Response)
+=end
         begin
-          RAWS::S3.put(bucket_name, 'aaa') do |request|
+          RAWS::S3.put_object(bucket_name, 'aaa') do |request|
             request.send 'AAA'
           end
 
-        RAWS::S3.put(bucket_name, 'bbb') do |request|
+        RAWS::S3.put_object(bucket_name, 'bbb') do |request|
           request.header['content-length'] = 3
           request.send do |io|
            io.write 'BBB'
           end
         end
 
-        RAWS::S3.put(bucket_name, 'ccc') do |request|
+        RAWS::S3.put_object(bucket_name, 'ccc') do |request|
           request.send 'CCC'
         end
         rescue => e
@@ -39,17 +40,16 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 =end
       it "owner should return a owner information of the bucket" do
-        RAWS::S3.owner.should be_instance_of(Hash)
-        RAWS::S3.owner['DisplayName'].should be_instance_of(String)
-        RAWS::S3.owner['ID'].should be_instance_of(String)
+        RAWS::S3.owner.should be_instance_of(RAWS::S3::Owner)
+        RAWS::S3.owner.display_name.should be_instance_of(String)
+        RAWS::S3.owner.id.should be_instance_of(String)
       end
 
       it "buckets should return an array of RAWS::S3" do
-       RAWS::S3.buckets.should be_instance_of(Array)
-       RAWS::S3.buckets.each do |bucket|
+       RAWS::S3.list_buckets.should be_instance_of(Array)
+       RAWS::S3.list_buckets.each do |bucket|
          bucket.should be_instance_of(RAWS::S3)
        end
-       RAWS::S3.buckets.should include(RAWS::S3[bucket_name])
       end
 
       it "self['#{bucket_name}'] should be instance of RAWS::S3" do
@@ -66,15 +66,14 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         end
       end
 
-      it "filter('#{bucket_name}') should return an array of RAWS::HTTP::Response" do
-        RAWS::S3.filter(bucket_name).should be_instance_of(Array)
-        RAWS::S3.filter(bucket_name).each do |object|
+      it "filter('#{bucket_name}')" do
+        RAWS::S3.filter(bucket_name) do |object|
           object.should be_instance_of(Hash)
         end
       end
 
-      it 'put, get and delete method should put, get and delete the object' do
-        RAWS::S3.put(bucket_name, 'a') do |request|
+      it 'put_object, get_object and delete_object method should put, get and delete the object' do
+        RAWS::S3.put_object(bucket_name, 'a') do |request|
           request.should be_kind_of(RAWS::HTTP::Request)
 
           response = request.send('AAA')
@@ -82,7 +81,7 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
           response.should be_kind_of(RAWS::HTTP::Response)
         end
 
-        RAWS::S3.get(bucket_name, 'a') do |request|
+        RAWS::S3.get_object(bucket_name, 'a') do |request|
           request.should be_kind_of(RAWS::HTTP::Request)
 
           response = request.send
@@ -91,37 +90,37 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
           response.should be_kind_of(RAWS::HTTP::Response)
         end
 
-        response = RAWS::S3.delete(bucket_name, 'a')
+        response = RAWS::S3.delete_object(bucket_name, 'a')
         response.should be_kind_of(RAWS::HTTP::Response)
 
         lambda do
-          RAWS::S3.get(bucket_name, 'a')
+          RAWS::S3.get_object(bucket_name, 'a')
         end.should raise_error(RAWS::HTTP::Error)
       end
 
-      it "copy method should copy the object" do
-        response = RAWS::S3.copy(bucket_name, 'aaa', bucket_name, 'AAA')
+      it "copy_object method should copy the object" do
+        response = RAWS::S3.copy_object(bucket_name, 'aaa', bucket_name, 'AAA')
         response.should be_kind_of(RAWS::HTTP::Response)
 
         src = nil
-        RAWS::S3.get(bucket_name, 'aaa') do |request|
+        RAWS::S3.get_object(bucket_name, 'aaa') do |request|
           src = request.send.receive
         end
 
         dest = nil
-        RAWS::S3.get(bucket_name, 'AAA') do |request|
+        RAWS::S3.get_object(bucket_name, 'AAA') do |request|
           dest = request.send.receive
         end
 
         dest.should == src
 
-        response = RAWS::S3.delete(bucket_name, 'AAA')
+        response = RAWS::S3.delete_object(bucket_name, 'AAA')
         response.should be_kind_of(RAWS::HTTP::Response)
       end
 
-      it "head method should return header information of the object" do
-        response = RAWS::S3.head(bucket_name, 'aaa')
-        response.should be_kind_of(RAWS::S3::Header)
+      it "head_object method should return header information of the object" do
+        response = RAWS::S3.head_object(bucket_name, 'aaa')
+        response.should be_kind_of(RAWS::HTTP::Response)
       end
     end
 
@@ -151,9 +150,8 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
         @bucket.location.should == location_label
       end
 
-      it "filter should return an array of RAWS::HTTP::Response" do
-        @bucket.filter.should be_instance_of(Array)
-        @bucket.filter.each do |object|
+      it "filter should" do
+        @bucket.filter do |object|
           object.should be_instance_of(Hash)
         end
       end
@@ -203,7 +201,7 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
       end
 
       it "head method should return header information of the object" do
-        @bucket.head('aaa').should be_kind_of(RAWS::S3::Header)
+        @bucket.head('aaa').should be_kind_of(RAWS::HTTP::Response)
       end
     end
   end

@@ -1,113 +1,103 @@
+require 'forwardable'
+
 module RAWS::S3::Model
   module ClassMethods
+    include Enumerable
+    extend Forwardable
+    def_delegators :bucket,
+      :create_bucket,
+      :delete_bucket,
+      :owner,
+      :location,
+      :acl,
+      :put_object,
+      :put,
+      :copy_object,
+      :copy,
+      :get_object,
+      :get,
+      :head_object,
+      :head,
+      :delete_object,
+      :delete
+
     attr_accessor :bucket_name
 
-    def create_bucket
-      RAWS::S3.create_bucket(self.bucket_name)
+    def bucket
+      RAWS::S3[bucket_name]
     end
 
-    def delete_bucket(force=nil)
-      RAWS::S3.delete_bucket(self.bucket_name, force)
-    end
-
-    def filter(query={})
-      RAWS::S3.filter(self.bucket_name, query).map do |val|
-        self.new val['Key'], {}, true
+    def filter(query={}, &block)
+      bucket.filter(query) do |contents|
+        block.call self.new(contents['Key'], nil)
       end
     end
     alias :all :filter
+    alias :each :filter
 
-    def find(key, header={})
-      begin
-        self.new key, {}, true
-      rescue RAWS::HTTP::Error => e
-        if e.response.code == 404
-          nil
-        else
-          raise e
-        end
-      end
-    end
-
-    def acl
-      RAWS::S3.acl(self.bucket_name)
+    def find(key)
+      self.new key
     end
   end
 
   module InstanceMethods
     attr_reader :key
 
-    def initialize(key, header={}, exists=false)
-      @key, @exists = key, exists
-      @header = RAWS::S3::Header.new(self.class.bucket_name, key, header)
-      @metadata, @acl = nil, nil
+    def initialize(key)
+      @key, @header, @metadata = key, nil, nil
       after_initialize
     end
 
-    def exists?
-      @exists
-    end
-
     def header
-      begin
-        exists? && @header.reload
-      rescue RAWS::HTTP::Error => e
-        if e.response.code == 404
-          @exists = false
-        else
-          raise
-        end
-      end
-      @header
+      @header ||= self.class.head(@key).header
     end
 
     def metadata
-      @metadata ||= RAWS::S3::Metadata.new(header)
+      @metadata ||= RAWS::S3::Metadata.new header
     end
 
     def acl
-      @acl ||= RAWS::S3.acl(self.class.bucket_name, @key)
+      self.class.acl @key
     end
 
     def delete
-      RAWS::S3.delete(self.class.bucket_name, @key)
-      @exists = false
-    end
-
-    def receive(header={}, &block)
-      RAWS::S3.get(
-        self.class.bucket_name,
-        @key,
-        header
-      ) do |request|
-        response = request.send
-        response.receive(&block)
-        metadata.decode(response.header)
-        response
-      end
+      befor_delete
+      response = self.class.delete_object @key
+      after_delete response
     end
 
     def send(header={}, &block)
-      ret = RAWS::S3.put(
-        self.class.bucket_name,
+      before_send
+      @header.merge! header
+      response = self.class.put_object(
         @key,
-        metadata.encode.merge!(header)
+        @header.merge(metadata.encode)
       ) do |request|
-        request.send(&block)
+        request.send &block
       end
-      @exists = true
-      ret
+      after_send response
+    end
+
+    def receive(header={}, &block)
+      before_receive
+      after_send(
+        self.class.get_object(@key, header) do |request|
+          response = request.send
+          @header  = response.header
+          @metadata.decode @header
+          response.receive &block
+          response
+        end
+      )
     end
 
     def after_initialize; end
     def before_delete; end
-    def after_delete; end
-    def before_save; end
-    def after_save; end
-    def before_update; end
-    def after_update; end
-    def before_insert; end
-    def after_insert; end
+    def after_delete(response); end
+    def before_receive; end
+    def after_receive(response); end
+    def before_send; end
+    def after_send(response); end
   end
 
   def self.included(mod)

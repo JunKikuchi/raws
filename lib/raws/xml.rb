@@ -1,5 +1,3 @@
-require 'nokogiri'
-
 module RAWS
   module XML
     def self.unpack_attrs(attrs)
