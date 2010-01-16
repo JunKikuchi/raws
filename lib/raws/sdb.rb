@@ -71,18 +71,22 @@ class RAWS::SDB
       Adapter.get_attributes(domain_name, item_name, *attrs)\
         ['GetAttributesResponse']['GetAttributesResult']['Attribute']
     end
+    alias :get :get_attributes
 
     def put_attributes(domain_name, item_name, attrs={}, *replaces)
       Adapter.put_attributes domain_name, item_name, attrs, *replaces
     end
+    alias :put :put_attributes
 
     def batch_put_attributes(domain_name, items={}, replaces={})
       Adapter.batch_put_attributes domain_name, items, replaces
     end
+    alias :batch_put :batch_put_attributes
 
     def delete_attributes(domain_name, item_name, attrs={})
       Adapter.delete_attributes domain_name, item_name, attrs
     end
+    alias :delete :delete_attributes
   end
 
   attr_reader :domain_name
