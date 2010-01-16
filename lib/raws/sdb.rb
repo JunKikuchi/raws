@@ -43,6 +43,14 @@ class RAWS::SDB
       end while next_token = data['NextToken']
     end
 
+    def domains(&block)
+      if block_given?
+        each(&block)
+      else
+        map
+      end
+    end
+
     def [](domain_name)
       self.new domain_name
     end
