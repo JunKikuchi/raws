@@ -94,7 +94,7 @@ module RAWS::S3::Model
       ret = self.class.get_object(@key, header) do |request|
         response = request.send
         @header  = response.header
-        metadata.decode header
+        metadata.decode @header
         response.receive &block
         response
       end
