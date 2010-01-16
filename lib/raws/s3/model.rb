@@ -72,7 +72,7 @@ module RAWS::S3::Model
     end
 
     def delete
-      befor_delete
+      before_delete
       response = self.class.delete_object @key
       after_delete response
     end

@@ -22,7 +22,7 @@ class RAWS::S3
 
     # Delete the bucket.
     def delete_bucket(bucket_name, force=nil)
-      filter(bucket_name).each do |val|
+      filter(bucket_name) do |val|
         delete(bucket_name, val['Key'])
       end if force == :force
 
@@ -72,11 +72,11 @@ class RAWS::S3
 
     def filter(bucket_name, query={}, &block)
       begin
-        ret = Adapter.get_bucket(bucket_name, query).doc['ListBucketResult']
-        ret['Contents'].each do |contents|
+        vals = Adapter.get_bucket(bucket_name, query).doc['ListBucketResult']
+        vals['Contents'].each do |contents|
           block.call contents
-        end if ret.key? 'Contents'
-        query['Marker'] = ret['Marker'].empty? ? nil : ret['Marker']
+        end if vals.key? 'Contents'
+        query['Marker'] = vals['Marker'].empty? ? nil : vals['Marker']
       end while query['Marker']
     end
     alias :all :filter
