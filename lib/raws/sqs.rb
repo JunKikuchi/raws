@@ -53,6 +53,14 @@ class RAWS::SQS
       list_queues(prefix).each(&block)
     end
 
+    def queues(&block)
+      if block_given?
+        each(&block)
+      else
+        map
+      end
+    end
+
     # Returns the instance of RAWS::SQS.
     def [](queue_name_or_url)
       self.new queue_url(queue_name_or_url)
