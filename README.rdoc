@@ -221,4 +221,4 @@ RAWS is a Ruby library for Amazon Web Service (AWS).
 
 == Copyright
 
-Copyright (c) 2009 Jun Kikuchi. See LICENSE for details.
+Copyright (c) 2009, 2010 Jun Kikuchi. See LICENSE for details.
