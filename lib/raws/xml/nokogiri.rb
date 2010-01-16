@@ -26,8 +26,6 @@ module RAWS
             else
               ret[name] = tag.content
             end
-          when nil
-            ret[name] = nil
           else
             if ret.key? name
               ret[name] << {}

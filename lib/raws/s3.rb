@@ -39,6 +39,14 @@ class RAWS::S3
       end
     end
 
+    def buckets(&block)
+      if block_given?
+        each(&block)
+      else
+        map
+      end
+    end
+
     def each(&block)
       list_buckets.each(&block)
     end
@@ -49,7 +57,7 @@ class RAWS::S3
 
     def location(bucket_name)
       doc = Adapter.get_bucket_location(bucket_name).doc
-      doc['LocationConstraint'] || 'US'
+      doc['LocationConstraint'].empty? && 'US'
     end
 
     def acl(bucket_name, key=nil)
@@ -62,29 +70,35 @@ class RAWS::S3
         ret['Contents'].each do |contents|
           block.call contents
         end if ret.key? 'Contents'
-      end while query['Marker'] = ret['Marker']
+        query['Marker'] = ret['Marker'].empty? ? nil : ret['Marker']
+      end while query['Marker']
     end
     alias :all :filter
 
     def put_object(bucket_name, key, header={}, &block)
       Adapter.put_object bucket_name, key, header, &block
     end
+    alias :put :put_object
 
     def copy_object(src_bucket, src_key, dest_bucket, dest_key, header={})
       Adapter.copy_object src_bucket, src_key, dest_bucket, dest_key, header
     end
+    alias :copy :copy_object
 
     def get_object(bucket_name, key, header={}, &block)
       Adapter.get_object bucket_name, key, header, &block
     end
+    alias :get :get_object
 
     def head_object(bucket_name, key)
       Adapter.head_object bucket_name, key
     end
+    alias :head :head_object
 
     def delete_object(bucket_name, key)
       Adapter.delete_object bucket_name, key
     end
+    alias :delete :delete_object
   end
 
   attr_reader :bucket_name
