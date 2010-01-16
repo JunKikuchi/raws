@@ -91,15 +91,15 @@ module RAWS::S3::Model
 
     def receive(header={}, &block)
       before_receive
-      after_send(
-        self.class.get_object(@key, header) do |request|
-          response = request.send
-          @header  = response.header
-          @metadata.decode @header
-          response.receive &block
-          response
-        end
-      )
+      ret = self.class.get_object(@key, header) do |request|
+        response = request.send
+        @header  = response.header
+        metadata.decode header
+        response.receive &block
+        response
+      end
+      after_send ret
+      ret
     end
 
     def after_initialize; end
