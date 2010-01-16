@@ -29,22 +29,30 @@ module RAWS::S3::Model
 
     def filter(query={}, &block)
       bucket.filter(query) do |contents|
-        block.call self.new(contents['Key'], nil)
+        block.call self.new(contents['Key'])
       end
     end
     alias :all :filter
     alias :each :filter
 
     def find(key)
-      self.new key
+      begin
+        self.new key, head(key).header
+      rescue => e
+        if e.response.code == 404
+          nil
+        else
+          raise e
+        end
+      end
     end
   end
 
   module InstanceMethods
     attr_reader :key
 
-    def initialize(key)
-      @key, @header, @metadata = key, nil, nil
+    def initialize(key, header=nil)
+      @key, @header, @metadata = key, header, nil
       after_initialize
     end
 
