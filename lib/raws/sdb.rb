@@ -12,14 +12,18 @@ class RAWS::SDB
       @http ||= RAWS.http
     end
 
+    # Creates a new domain and returns the instance of RAWS:SDB.
     def create_domain(domain_name)
       Adapter.create_domain(domain_name)
+      self[domain_name]
     end
 
+    # Deletes the domain.
     def delete_domain(domain_name)
       Adapter.delete_domain(domain_name)
     end
 
+    # Returns the domain metadata.
     def domain_metadata(domain_name)
       Adapter.domain_metadata(domain_name)\
         ['DomainMetadataResponse']['DomainMetadataResult']
@@ -51,6 +55,7 @@ class RAWS::SDB
       end
     end
 
+    # Returns the instance of RAWS::SDB.
     def [](domain_name)
       self.new domain_name
     end

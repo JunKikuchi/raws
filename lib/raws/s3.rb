@@ -14,10 +14,13 @@ class RAWS::S3
       @http ||= RAWS.http
     end
 
+    # Creates a new bucket and returns the instance of RAWS::S3.
     def create_bucket(bucket_name, location=nil, header={})
       Adapter.put_bucket bucket_name, location, header
+      self[bucket_name]
     end
 
+    # Delete the bucket.
     def delete_bucket(bucket_name, force=nil)
       filter(bucket_name).each do |val|
         delete(bucket_name, val['Key'])
@@ -26,10 +29,12 @@ class RAWS::S3
       Adapter.delete_bucket(bucket_name)
     end
 
+    # Returns the instance of RAWS::S3::Owner.
     def owner
       Owner.new Adapter.get_service.doc['ListAllMyBucketsResult']['Owner']
     end
 
+    # Returns an array of RAWS::S3 objects.
     def list_buckets
       begin
         doc = Adapter.get_service.doc
@@ -51,6 +56,7 @@ class RAWS::S3
       list_buckets.each(&block)
     end
 
+    # Returns the instance of RAWS::S3.
     def [](bucket_name)
       self.new bucket_name
     end
