@@ -16,12 +16,23 @@ module RAWS::S3::Model
       :copy,
       :get_object,
       :get,
-      :head_object,
-      :head,
       :delete_object,
       :delete
 
     attr_accessor :bucket_name
+
+    def head_object(key)
+      begin
+        bucket.head_object(key).header
+      rescue => e
+        if e.response.code == 404
+          {}
+        else
+          raise e
+        end
+      end
+    end
+    alias :head :head_object
 
     def bucket
       RAWS::S3[bucket_name]
@@ -36,15 +47,7 @@ module RAWS::S3::Model
     alias :each :filter
 
     def find(key)
-      begin
-        self.new key, head(key).header
-      rescue => e
-        if e.response.code == 404
-          nil
-        else
-          raise e
-        end
-      end
+      self.new key, head(key)
     end
   end
 
@@ -57,7 +60,7 @@ module RAWS::S3::Model
     end
 
     def header
-      @header ||= self.class.head(@key).header
+      @header ||= self.class.head(@key)
     end
 
     def metadata
