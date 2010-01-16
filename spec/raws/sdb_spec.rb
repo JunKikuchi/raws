@@ -2,11 +2,13 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe RAWS::SDB do
   before :all do
+=begin
     RAWS_SDB_DOMAINS.each do |name|
       RAWS::SDB.create_domain(name)
     end
     puts '[sleep 60 secs]'
     sleep 60
+=end
     @domain_name = RAWS_SDB_DOMAINS.first
     RAWS::SDB[@domain_name].put(
       '100', 'a' => 10
@@ -24,6 +26,7 @@ describe RAWS::SDB do
     )
   end
 
+=begin
   after :all do
     RAWS_SDB_DOMAINS.each do |name|
       RAWS::SDB.delete_domain(name)
@@ -31,22 +34,29 @@ describe RAWS::SDB do
     puts '[sleep 60 secs]'
     sleep 60
   end
+=end
 
   describe 'class' do
     it 'methods' do
       %w'
+        http
         create_domain
         delete_domain
         domain_metadata
         list_domains
         each
+        domains
         []
         select
         all
         get_attributes
+        get
         put_attributes
+        put
         batch_put_attributes
+        batch_put
         delete_attributes
+        delete
       '.each do |val|
         RAWS::SDB.should respond_to val.to_sym
       end
@@ -96,18 +106,6 @@ describe RAWS::SDB do
       end
 
       RAWS::SDB[@domain_name].select.where('b = ?', 20) do |val|
-        val.first.should be_kind_of(String)
-        val.last.should be_kind_of(Hash)
-      end
-    end
-
-    it 'all' do
-      RAWS::SDB[@domain_name].all do |val|
-        val.first.should be_kind_of(String)
-        val.last.should be_kind_of(Hash)
-      end
-
-      RAWS::SDB[@domain_name].all.filter('b = ?', 20) do |val|
         val.first.should be_kind_of(String)
         val.last.should be_kind_of(Hash)
       end
@@ -230,6 +228,7 @@ describe RAWS::SDB do
         batch_put
         delete_attributes
         delete
+        <=>
       '.each do |val|
         @sdb.should respond_to val.to_sym
       end

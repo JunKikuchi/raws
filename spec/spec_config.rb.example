@@ -1,17 +1,9 @@
-require 'rubygems'
-require 'lib/raws'
+RAWS.aws_access_key_id     = __AWS_ACCESS_KEY_ID__
+RAWS.aws_secret_access_key = __AWS_SECRET_ACCESS_KEY__
 
-require 'yaml'
-def d(val)
-  puts val.to_yaml
-end
-
-RAWS.aws_access_key_id = AWS_ACCESS_KEY_ID
-RAWS.aws_secret_access_key = AWS_SECRET_ACCESS_KEY
-
-RAWS_SDB_DOMAINS = [__AWS_SDB_DOMAIN__,]
-RAWS_SQS_QUEUE  = __AWS_SQS_QUEUE__
-RAWS_S3_BUCKETS = [
+RAWS_SDB_DOMAINS = [__AWS_SDB_DOMAIN__,__AWS_SDB_DOMAIN__]
+RAWS_SQS_QUEUE   = __AWS_SQS_QUEUE__
+RAWS_S3_BUCKETS  = [
   # bucket_name, location, acl
   [__BUCKET_NAME__, nil, nil],
 ]

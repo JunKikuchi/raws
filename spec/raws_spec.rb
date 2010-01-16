@@ -6,6 +6,8 @@ describe RAWS do
       %w'
         aws_access_key_id
         aws_secret_access_key
+        http
+        xml
         escape
         unescape
         logger

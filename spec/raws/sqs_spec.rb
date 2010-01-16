@@ -1,6 +1,7 @@
-require 'spec/spec_config'
+require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe RAWS::SQS do
+=begin
   before :all do
     begin
       RAWS::SQS.create_queue(RAWS_SQS_QUEUE)
@@ -20,19 +21,29 @@ describe RAWS::SQS do
       d e
     end
   end
+=end
 
   describe 'class' do
     it 'methods' do
       %w'
+        http
         queue_url
         create_queue
         delete_queue
         list_queues
+        each
+        queues
         []
         get_queue_attributes
         set_queue_attributes
         send_message
+        send
         receive_message
+        receive
+        change_message_visibility
+        delete_message
+        add_permission
+        remove_permission
       '.each do |val|
         RAWS::SQS.should respond_to val.to_sym
       end
@@ -56,14 +67,20 @@ describe RAWS::SQS do
 
     it 'methods' do
       %w'
+        queue_url
+        queue_name
         delete_queue
         get_queue_attributes
         set_queue_attributes
         send_message
+        send
         receive_message
+        receive
+        change_message_visibility
         delete_message
         add_permission
         remove_permission
+        <=>
       '.each do |val|
         @queue.should respond_to val.to_sym
       end
