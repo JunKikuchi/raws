@@ -10,11 +10,11 @@ begin
     gem.email = "kikuchi@bonnou.com"
     gem.homepage = "http://github.com/JunKikuchi/raws"
     gem.authors = ["Jun Kikuchi"]
-    gem.add_development_dependency "rspec", ">= 1.2.9"
-    gem.add_dependency 'typhoeus',  '>=0.1.9'
-    gem.add_dependency 'ht2p',      '>=0.0.5'
-    gem.add_dependency 'nokogiri',  '>=1.3.3'
-    gem.add_dependency 'uuidtools', '>=2.0.0'
+    gem.add_development_dependency "rspec"
+    gem.add_dependency 'typhoeus',  '>=0.1.14'
+    gem.add_dependency 'ht2p',      '>=0.0.7'
+    gem.add_dependency 'nokogiri',  '>=1.4.1'
+    gem.add_dependency 'uuidtools', '>=2.1.1'
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
