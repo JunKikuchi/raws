@@ -26,7 +26,7 @@ module RAWS::SDB::Model
       :put,
       :batch_put_attributes,
       :batch_put,
-      :delete_attribute,
+      :delete_attributes,
       :delete
 
     attr_accessor :domain_name
@@ -80,7 +80,7 @@ module RAWS::SDB::Model
 
     def delete
       before_delete
-      self.class.delete_attribute(id) if id
+      self.class.delete_attributes(id) if id
       @exists = false
       after_delete
     end
