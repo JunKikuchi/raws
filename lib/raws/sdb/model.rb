@@ -41,7 +41,7 @@ module RAWS::SDB::Model
     alias :all :select
 
     def find(id)
-      if attrs = get_attribute(id)
+      if attrs = get_attributes(id)
         self.new(attrs, id, true)
       end
     end
