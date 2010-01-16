@@ -95,6 +95,7 @@ class RAWS::SQS
     def send_message(queue_name_or_url, msg)
       Adapter.send_message queue_url(queue_name_or_url), msg
     end
+    alias :send :send_message
 
     # Receives one or more messages form the queue.
     # Returns an array of message data.
@@ -105,6 +106,7 @@ class RAWS::SQS
         *attrs
       )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
     end
+    alias :receive :receive_message
 
     # Changes the message visibility timeout.
     def change_message_visibility(
