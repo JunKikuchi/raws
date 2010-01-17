@@ -33,10 +33,10 @@ class RAWS::S3::Metadata < Hash
 
       if val.is_a? Array
         ret[key] = val.map do |v|
-          RAWS.escape(v.strip)
+          RAWS.escape v
         end.join(',')
       else
-        ret[key] = RAWS.escape(val.strip)
+        ret[key] = RAWS.escape val
       end
 
       ret
