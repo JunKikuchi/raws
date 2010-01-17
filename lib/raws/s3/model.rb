@@ -79,7 +79,11 @@ module RAWS::S3::Model
 
     def send(header={}, &block)
       before_send
-      @header.merge! header
+      if @header
+        @header.merge! header
+      else
+        @header = header
+      end
       response = self.class.put_object(
         @key,
         @header.merge(metadata.encode)
