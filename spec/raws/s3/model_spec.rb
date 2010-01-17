@@ -1,4 +1,4 @@
-require 'spec/spec_config'
+require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 class S3Object
   include RAWS::S3::Model
@@ -22,7 +22,7 @@ describe RAWS::S3::Model do
 
   describe 'object' do
     before do
-      @model = S3Object.first
+      @model = S3Object.new('a')
     end
 
     it 'methods' do
