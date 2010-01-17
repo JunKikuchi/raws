@@ -17,16 +17,16 @@ RAWS_S3_BUCKETS.each do |bucket_name, location, acl|
             request.send 'AAA'
           end
 
-        RAWS::S3.put_object(bucket_name, 'bbb') do |request|
-          request.header['content-length'] = 3
-          request.send do |io|
-           io.write 'BBB'
+          RAWS::S3.put_object(bucket_name, 'bbb') do |request|
+            request.header['content-length'] = 3
+            request.send do |io|
+             io.write 'BBB'
+            end
           end
-        end
 
-        RAWS::S3.put_object(bucket_name, 'ccc') do |request|
-          request.send 'CCC'
-        end
+          RAWS::S3.put_object(bucket_name, 'ccc') do |request|
+            request.send 'CCC'
+          end
         rescue => e
           d e
         end
