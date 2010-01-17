@@ -70,14 +70,9 @@ class RAWS::S3
       ACL.new bucket_name, key
     end
 
-    def filter(bucket_name, query={}, &block)
-      begin
-        vals = Adapter.get_bucket(bucket_name, query).doc['ListBucketResult']
-        vals['Contents'].each do |contents|
-          block.call contents
-        end if vals.key? 'Contents'
-        query['Marker'] = vals['Marker'].empty? ? nil : vals['Marker']
-      end while query['Marker']
+    def filter(bucket_name, query={})
+      vals = Adapter.get_bucket(bucket_name, query).doc['ListBucketResult']
+      vals['Contents'] || []
     end
     alias :all :filter
 
