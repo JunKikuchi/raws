@@ -12,6 +12,7 @@ module RAWS
       attr_reader :response
 
       def initialize(response)
+        super("code=#{response.code},body=#{response.body}")
         @response = response
       end
     end
