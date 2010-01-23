@@ -78,9 +78,9 @@ module RAWS::SDB::Model
       values[key] = val
     end
 
-    def delete
+    def delete(attrs={})
       before_delete
-      self.class.delete_attributes(id) if id
+      self.class.delete_attributes(id, attrs) if id
       @exists = false
       after_delete
     end
