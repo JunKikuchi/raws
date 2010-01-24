@@ -38,9 +38,9 @@ module RAWS::S3::Model
       RAWS::S3[bucket_name]
     end
 
-    def filter(query={}, &block)
-      bucket.filter(query) do |contents|
-        block.call self.new(contents['Key'])
+    def filter(query={})
+      bucket.filter(query).map do |contents|
+        self.new(contents['Key'])
       end
     end
     alias :all :filter
