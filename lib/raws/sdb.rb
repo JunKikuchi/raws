@@ -34,8 +34,8 @@ class RAWS::SDB
         ['ListDomainsResponse']['ListDomainsResult']
 
       {
-        'Domains' => (doc['DomainName'] || []).map do |val| self.new(val) end,
-        'NextToken' => doc['NextToken']
+        'Domains' => (doc ? doc['DomainName'] : []).map do |v| self.new(v) end,
+        'NextToken' => doc && doc['NextToken']
       }
     end
 
