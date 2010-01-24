@@ -41,11 +41,14 @@ class RAWS::SQS
 
     # Returns an array of RAWS::SQS objects.
     def list_queues(prefix=nil)
-      (
-        Adapter.list_queues(prefix)\
-          ['ListQueuesResponse']['ListQueuesResult']['QueueUrl'] || []
-      ).map do |val|
-        self.new(val)
+      doc = Adapter.list_queues(prefix)\
+        ['ListQueuesResponse']['ListQueuesResult']
+      if doc
+        doc['QueueUrl'].map do |val|
+          self.new(val)
+        end
+      else
+        []
       end
     end
 
@@ -100,11 +103,12 @@ class RAWS::SQS
     # Receives one or more messages form the queue.
     # Returns an array of message data.
     def receive_message(queue_name_or_url, params={}, *attrs)
-      Adapter.receive_message(
+      doc = Adapter.receive_message(
         queue_url(queue_name_or_url),
         params,
         *attrs
-      )['ReceiveMessageResponse']['ReceiveMessageResult']['Message'] || []
+      )['ReceiveMessageResponse']['ReceiveMessageResult']
+      doc ? doc['Message'] : []
     end
     alias :receive :receive_message
 

@@ -73,8 +73,9 @@ class RAWS::SDB
     alias :all :select
 
     def get_attributes(domain_name, item_name, *attrs)
-      Adapter.get_attributes(domain_name, item_name, *attrs)\
-        ['GetAttributesResponse']['GetAttributesResult']['Attribute']
+      doc = Adapter.get_attributes(domain_name, item_name, *attrs)\
+        ['GetAttributesResponse']['GetAttributesResult']
+      doc && doc['Attribute']
     end
     alias :get :get_attributes
 

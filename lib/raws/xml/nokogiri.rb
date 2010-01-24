@@ -20,6 +20,8 @@ module RAWS
           end
 
           case tag.child
+          when nil
+            ret[name] = nil
           when ::Nokogiri::XML::Text
             if ret.key? name
               ret[name] << tag.content

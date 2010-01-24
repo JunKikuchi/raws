@@ -36,11 +36,13 @@ class RAWS::S3
 
     # Returns an array of RAWS::S3 objects.
     def list_buckets
-      begin
-        doc = Adapter.get_service.doc
-        doc['ListAllMyBucketsResult']['Buckets']['Bucket'] || []
-      end.map do |val|
-        self[val['Name']]
+      doc = Adapter.get_service.doc['ListAllMyBucketsResult']['Buckets']
+      if doc
+        doc['Bucket'].map do |val|
+          self[val['Name']]
+        end
+      else
+        []
       end
     end
 
@@ -62,8 +64,8 @@ class RAWS::S3
     end
 
     def location(bucket_name)
-      doc = Adapter.get_bucket_location(bucket_name).doc
-      doc['LocationConstraint'].empty? && 'US'
+      doc = Adapter.get_bucket_location(bucket_name).doc['LocationConstraint']
+      doc || 'US'
     end
 
     def acl(bucket_name, key=nil)
