@@ -67,8 +67,8 @@ class RAWS::SDB
           ['SelectResponse']['SelectResult']
         ret['Item'].each do |val|
           block.call [val['Name'], val['Attribute']]
-        end if ret.key? 'Item'
-      end while next_token = ret['NextToken']
+        end if ret
+      end while ret && next_token = ret['NextToken']
     end
     alias :all :select
 
