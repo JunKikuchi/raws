@@ -29,16 +29,16 @@ module RAWS
               ret[name] = tag.content
             end
           else
+            doc = _parse(tag, params)
+            doc = RAWS::XML.unpack_attrs(doc) if unpack.include?(name)
+
             if ret.key? name
-              ret[name] << {}
-              _parse(tag, params, ret[name].last)
+              ret[name] << doc
             else
-              ret[name] = {}
-              _parse(tag, params, ret[name])
+              ret[name] = doc
             end
           end
         end
-        ret[name] = RAWS::XML.unpack_attrs(ret[name]) if unpack.include?(name)
 
         ret
       end

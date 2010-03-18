@@ -13,7 +13,7 @@ module RAWS
   end
 
   def self.escape(val)
-    URI.escape(val.to_s, /([^a-zA-Z0-9\-_.~]+)/n)
+    URI.escape(val.to_s)
   end
 
   def self.unescape(val)
@@ -34,15 +34,12 @@ module RAWS
   end
 
   autoload :HTTP, 'raws/http'
-  autoload :XML,  'raws/xml'
+  autoload :XML, 'raws/xml'
 
-  autoload :SDB,  'raws/sdb'
-  autoload :SQS,  'raws/sqs'
-  autoload :S3,   'raws/s3'
+  autoload :SDB, 'raws/sdb'
+  autoload :SQS, 'raws/sqs'
+  autoload :S3, 'raws/s3'
 end
 
-RAWS.http = RAWS::HTTP::Typhoeus
-RAWS.xml = RAWS::XML::Nokogiri
-
-# 今のところ S3 で Typhoeus を使うのは無理っぽい
-RAWS::S3.http = RAWS::HTTP::HT2P
+RAWS.http = RAWS::HTTP::HT2P
+RAWS.xml  = RAWS::XML::Nokogiri
