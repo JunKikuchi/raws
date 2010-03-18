@@ -60,10 +60,10 @@ class RAWS::SDB
       self.new domain_name
     end
 
-    def select(expr, params=[], &block)
+    def select(expr, params=[], consistent_read=false, &block)
       next_token = nil
       begin
-        ret = Adapter.select(expr, params, next_token)\
+        ret = Adapter.select(expr, params, consistent_read, next_token)\
           ['SelectResponse']['SelectResult']
         ret['Item'].each do |val|
           block.call [val['Name'], val['Attribute']]
@@ -72,8 +72,8 @@ class RAWS::SDB
     end
     alias :all :select
 
-    def get_attributes(domain_name, item_name, *attrs)
-      doc = Adapter.get_attributes(domain_name, item_name, *attrs)\
+    def get_attributes(domain_name, item_name, params={})
+      doc = Adapter.get_attributes(domain_name, item_name, params)\
         ['GetAttributesResponse']['GetAttributesResult']
       doc && doc['Attribute']
     end
@@ -119,8 +119,8 @@ class RAWS::SDB
   end
   alias :all :select
 
-  def get_attributes(item_name, *attrs)
-    self.class.get_attributes domain_name, item_name, *attrs
+  def get_attributes(item_name, params={})
+    self.class.get_attributes domain_name, item_name, params
   end
   alias :get :get_attributes
 

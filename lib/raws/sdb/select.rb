@@ -10,6 +10,7 @@ class RAWS::SDB::Select
     @values      = nil
     @sort        = nil
     @limit       = nil
+    @consistent_read = false
   end
 
   def attr_filter(val)
@@ -63,6 +64,12 @@ class RAWS::SDB::Select
     self
   end
 
+  def consistent(val=true)
+    @consistent_read = val
+    self
+  end
+  alias :consistent_read :consistent
+
   def to_sql
     s = [
       'select',
@@ -75,6 +82,6 @@ class RAWS::SDB::Select
     s.push('order by', @sort     ) if @sort
     s.push('limit',    @limit    ) if @limit
 
-    [s.join(' '), @values]
+    [s.join(' '), @values, @consistent_read]
   end
 end

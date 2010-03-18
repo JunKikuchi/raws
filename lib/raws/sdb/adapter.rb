@@ -103,18 +103,18 @@ class RAWS::SDB::Adapter
       connect('GET', URI, PARAMS.merge(params), :multiple => %w'DomainName')
     end
 
-    def get_attributes(domain_name, item_name, *attrs)
+    def get_attributes(domain_name, item_name, _params={})
       params = {
         'Action'     => 'GetAttributes',
         'DomainName' => domain_name,
         'ItemName'   => item_name
       }
 
-      i = 0
-      attrs.each do |name|
+      _params[:attribute_names].each_with_index do |name, i|
         params["AttributeName.#{i}"] = name
-        i += 1
       end
+
+      params['ConsistentRead'] = 'true' if _params[:consistent_read]
 
       connect(
         'GET',
@@ -181,12 +181,13 @@ class RAWS::SDB::Adapter
       end
     end
 
-    def select(expr, expr_params=[], next_token=nil)
+    def select(expr, expr_params=[], consistent_read=false, next_token=nil)
       params = {
         'Action'           => 'Select',
         'SelectExpression' => query_expr(expr, *expr_params)
       }
-      params['NextToken'] = next_token if next_token
+      params['NextToken'] = next_token  if next_token
+      params['ConsistentRead'] = 'true' if consistent_read
 
       connect(
         'GET',
